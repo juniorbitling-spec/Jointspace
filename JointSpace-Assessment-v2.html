@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Joint Space — Physiotherapy Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#6b8c2a;--green2:#7fa832;--green-light:#eef4d6;--green-mid:#d4e890;
+  --ink:#1a2410;--ink2:#3a4a20;--ink3:#6b7a50;--muted:#9aaa80;
+  --bg:#f4f7ee;--white:#fff;--surface:#f9fbf4;--border:#dde8c0;--border2:#ccd8a0;
+  --red:#c0392b;--red-light:#fde8e6;--amber:#d4820a;--amber-light:#fef3dc;
+  --blue:#2563a8;--blue-light:#dbeafe;--shadow:0 2px 8px rgba(107,140,42,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--ink);font-family:'Nunito',sans-serif;min-height:100dvh;padding-bottom:40px;}
+
+/* NAV TABS */
+.nav-bar{background:linear-gradient(135deg,#2d4a0e 0%,#5a7a20 100%);padding:0;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,0.18);}
+.nav-top{display:flex;align-items:center;gap:10px;padding:12px 16px 8px;}
+.brand-name{font-size:18px;font-weight:900;color:#fff;line-height:1;}
+.brand-sub{font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.15em;text-transform:uppercase;margin-top:1px;}
+.nav-tabs{display:flex;border-top:1px solid rgba(255,255,255,0.12);}
+.nav-tab{flex:1;padding:10px 6px;text-align:center;font-size:11px;font-weight:800;color:rgba(255,255,255,0.55);cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;letter-spacing:0.06em;background:none;border-top:none;border-left:none;border-right:none;font-family:'Nunito',sans-serif;}
+.nav-tab.active{color:#fff;border-bottom-color:#a8d030;}
+.nav-tab .tab-badge{background:var(--red);color:#fff;font-size:9px;font-weight:900;border-radius:10px;padding:1px 5px;margin-left:4px;display:none;}
+.nav-tab .tab-badge.show{display:inline;}
+
+/* PAGES */
+.page{display:none;}.page.active{display:block;}
+
+/* ── FORM PAGE ── */
+.joint-selector{padding:12px 12px 0;}
+.joint-selector-label{font-size:10px;font-weight:800;color:var(--ink3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+.joint-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+.joint-btn{background:var(--white);border:2px solid var(--border);border-radius:11px;padding:9px 4px;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Nunito',sans-serif;}
+.joint-btn:active{transform:scale(0.96);}
+.joint-btn.active{background:var(--green-light);border-color:var(--green2);}
+.joint-icon{font-size:20px;display:block;margin-bottom:3px;}
+.joint-label{font-size:10px;font-weight:800;color:var(--ink2);letter-spacing:0.04em;}
+.joint-btn.active .joint-label{color:var(--green);}
+
+.form-wrap{padding:12px;}
+.section-card{background:var(--white);border:1px solid var(--border);border-radius:13px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow);animation:fadeUp 0.3s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.section-head{background:linear-gradient(90deg,var(--green-light),var(--surface));padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;cursor:pointer;}
+.section-num{font-size:10px;font-weight:900;color:var(--green);background:var(--white);border:1.5px solid var(--green-mid);border-radius:5px;padding:2px 6px;}
+.section-title{font-size:13px;font-weight:800;color:var(--ink);flex:1;}
+.section-toggle{font-size:14px;color:var(--green);transition:transform 0.2s;}
+.section-toggle.open{transform:rotate(180deg);}
+.section-body{padding:12px 13px;display:none;}
+.section-body.open{display:block;}
+
+.field-group{margin-bottom:11px;}
+.field-label{font-size:10px;font-weight:800;color:var(--ink3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;display:block;}
+.field-input,.field-select,.field-textarea{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--ink);font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;padding:9px 11px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;}
+.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--green2);background:#fff;}
+.field-textarea{resize:none;min-height:68px;line-height:1.5;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.field-row.three{grid-template-columns:1fr 1fr 1fr;}
+
+.table-wrap{overflow-x:auto;margin-bottom:6px;}
+.assess-table{width:100%;border-collapse:collapse;font-size:12px;min-width:380px;}
+.assess-table th{background:var(--green-light);color:var(--ink2);font-size:10px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;padding:6px 7px;border:1px solid var(--border);text-align:left;}
+.assess-table td{border:1px solid var(--border);padding:5px 6px;vertical-align:middle;}
+.assess-table tr:nth-child(even) td{background:var(--surface);}
+.assess-table .row-label{font-weight:700;color:var(--ink2);font-size:11px;white-space:nowrap;}
+.assess-table input[type="text"],.assess-table select,.assess-table input[type="number"]{width:100%;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;color:var(--ink);outline:none;padding:2px 3px;border-bottom:1.5px solid var(--border2);min-width:55px;}
+.assess-table input:focus,.assess-table select:focus{border-bottom-color:var(--green2);background:var(--green-light);}
+
+.nprs-wrap{display:flex;align-items:center;gap:9px;}
+.nprs-slider{flex:1;-webkit-appearance:none;height:6px;border-radius:3px;background:linear-gradient(to right,var(--green) 0%,var(--green) var(--val,0%),var(--border2) var(--val,0%),var(--border2) 100%);}
+.nprs-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);cursor:pointer;}
+.nprs-val{font-size:16px;font-weight:900;color:var(--green);min-width:36px;text-align:center;background:var(--green-light);border-radius:6px;padding:3px 5px;}
+
+.radio-group{display:flex;flex-wrap:wrap;gap:5px;}
+.radio-opt{background:var(--surface);border:1.5px solid var(--border);border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--ink2);cursor:pointer;transition:all 0.15s;}
+.radio-opt.selected{background:var(--green-light);border-color:var(--green2);color:var(--green);}
+.radio-opt input{display:none;}
+
+.posneg{display:flex;gap:5px;}
+.pn-btn{flex:1;padding:6px 4px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;text-align:center;transition:all 0.15s;background:var(--surface);color:var(--ink3);font-family:'Nunito',sans-serif;}
+.pn-btn.pos{background:var(--red-light);border-color:var(--red);color:var(--red);}
+.pn-btn.neg{background:var(--green-light);border-color:var(--green2);color:var(--green);}
+.pn-btn.na{background:var(--surface);border-color:var(--muted);color:var(--muted);}
+
+.img-upload-area{border:2px dashed var(--border2);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:var(--surface);transition:all 0.2s;margin-bottom:7px;}
+.img-upload-area:hover{border-color:var(--green2);background:var(--green-light);}
+.img-upload-area input{display:none;}
+.img-upload-icon{font-size:26px;margin-bottom:5px;}
+.img-upload-text{font-size:12px;font-weight:700;color:var(--ink3);}
+.img-upload-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.img-previews{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px;}
+.img-thumb{position:relative;width:68px;height:68px;border-radius:8px;overflow:hidden;border:2px solid var(--border);}
+.img-thumb img{width:100%;height:100%;object-fit:cover;}
+.img-thumb .del-img{position:absolute;top:2px;right:2px;background:var(--red);color:#fff;border:none;border-radius:50%;width:17px;height:17px;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+.sub-head{font-size:10px;font-weight:900;color:var(--green);letter-spacing:0.14em;text-transform:uppercase;padding:5px 0 4px;border-bottom:1.5px solid var(--green-mid);margin-bottom:7px;}
+.goal-item{display:flex;gap:7px;align-items:flex-start;margin-bottom:6px;}
+.goal-num{font-size:11px;font-weight:900;color:var(--green);background:var(--green-light);border-radius:5px;padding:3px 7px;flex-shrink:0;margin-top:2px;}
+
+.action-row{display:flex;gap:8px;padding:0 12px 14px;}
+.btn-main{flex:1;padding:12px;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;}
+.btn-main:active{transform:scale(0.97);}
+.btn-save{background:linear-gradient(135deg,#5a7a20,#7fa832);color:#fff;box-shadow:0 3px 10px rgba(107,140,42,0.3);}
+.btn-print{background:var(--surface);color:var(--ink2);border:1.5px solid var(--border2);}
+.btn-clear{background:var(--red-light);color:var(--red);border:1.5px solid rgba(192,57,43,0.3);}
+
+/* ── RECORDS PAGE ── */
+.rec-page-header{padding:12px 12px 8px;}
+.rec-search-row{display:flex;gap:7px;margin-bottom:8px;}
+.rec-search{flex:1;background:var(--white);border:1.5px solid var(--border);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;padding:9px 12px;outline:none;color:var(--ink);}
+.rec-search:focus{border-color:var(--green2);}
+.rec-filter{background:var(--white);border:1.5px solid var(--border);border-radius:9px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;padding:9px 10px;outline:none;color:var(--ink2);-webkit-appearance:none;min-width:90px;}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;}
+.stat-mini{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 11px;box-shadow:var(--shadow);}
+.stat-mini .sm-val{font-size:22px;font-weight:900;color:var(--green);}
+.stat-mini .sm-lbl{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.07em;text-transform:uppercase;}
+
+.rec-list{padding:0 12px 14px;}
+.rec-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:9px;box-shadow:var(--shadow);animation:fadeUp 0.3s ease both;}
+.rec-card-top{display:flex;align-items:flex-start;gap:9px;margin-bottom:7px;}
+.rec-joint-badge{font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:var(--green-light);color:var(--green);border:1px solid var(--green-mid);flex-shrink:0;}
+.rec-name{font-size:15px;font-weight:900;color:var(--ink);}
+.rec-date{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px;}
+.rec-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;}
+.rec-tag{font-size:10px;font-weight:700;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:2px 7px;color:var(--ink3);}
+.rec-complaint{font-size:12px;color:var(--ink3);margin-bottom:8px;line-height:1.45;font-style:italic;}
+.rec-actions{display:flex;gap:6px;}
+.rec-btn{flex:1;padding:8px;border-radius:7px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;border:none;transition:all 0.15s;text-align:center;}
+.rec-btn:active{transform:scale(0.96);}
+.rec-view{background:var(--green-light);color:var(--green);border:1px solid var(--green-mid)!important;}
+.rec-del{background:var(--red-light);color:var(--red);border:1px solid rgba(192,57,43,0.2)!important;}
+.rec-export-row{padding:0 12px 8px;display:flex;gap:7px;}
+.rec-export-btn{flex:1;padding:10px;border:1.5px solid var(--border2);border-radius:9px;background:var(--white);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--ink2);cursor:pointer;transition:all 0.15s;}
+.rec-export-btn:active{background:var(--surface);}
+.empty-state{text-align:center;padding:50px 20px;}
+.empty-state .ei{font-size:44px;margin-bottom:12px;}
+.empty-state h3{font-size:16px;font-weight:800;color:var(--ink2);margin-bottom:6px;}
+.empty-state p{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* ── VIEW MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);overflow-y:auto;}
+.modal-overlay.open{display:block;}
+.modal-box{background:var(--white);border-radius:16px 16px 0 0;margin-top:32px;min-height:calc(100dvh - 32px);}
+.modal-head{position:sticky;top:0;background:linear-gradient(135deg,#2d4a0e,#5a7a20);padding:13px 14px;border-radius:16px 16px 0 0;display:flex;align-items:center;gap:9px;z-index:10;}
+.modal-head-title{flex:1;font-size:14px;font-weight:900;color:#fff;}
+.modal-close-btn{background:rgba(255,255,255,0.2);border:none;border-radius:7px;padding:6px 11px;color:#fff;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.modal-print-btn{background:rgba(255,255,255,0.2);border:none;border-radius:7px;padding:6px 11px;color:#fff;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.modal-body{padding:14px;}
+.view-section{margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.view-sec-head{background:var(--green-light);padding:8px 12px;font-size:11px;font-weight:800;color:var(--ink2);border-bottom:1px solid var(--border);letter-spacing:0.06em;}
+.view-sec-body{padding:10px 12px;font-size:13px;line-height:1.7;color:var(--ink2);}
+.view-field{margin-bottom:5px;}
+.view-field strong{color:var(--ink);font-weight:800;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;font-weight:700;padding:11px 20px;border-radius:28px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
+.toast.show{opacity:1;}
+
+@media print{
+  .nav-bar,.joint-selector,.action-row,.rec-page-header,.rec-export-row,.modal-head{display:none!important;}
+  .section-body{display:block!important;}
+  .section-card,.rec-card{box-shadow:none;border:1px solid #ccc;}
+  body{background:white;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <div class="nav-top">
+    <div style="width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🦴</div>
+    <div><div class="brand-name">Joint Space</div><div class="brand-sub">Physiotherapy Assessment</div></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('form',this)" id="tab-form">📋 New Assessment</button>
+    <button class="nav-tab" onclick="switchPage('records',this)" id="tab-records">📂 Saved Records <span class="tab-badge" id="rec-badge">0</span></button>
+  </div>
+</div>
+
+<!-- PAGE: FORM -->
+<div class="page active" id="page-form">
+  <div class="joint-selector">
+    <div class="joint-selector-label">Select Joint / Region</div>
+    <div class="joint-grid">
+      <button class="joint-btn active" onclick="selectJoint('shoulder',this)"><span class="joint-icon">🫁</span><span class="joint-label">Shoulder</span></button>
+      <button class="joint-btn" onclick="selectJoint('spine',this)"><span class="joint-icon">🦴</span><span class="joint-label">Lumbar</span></button>
+      <button class="joint-btn" onclick="selectJoint('knee',this)"><span class="joint-icon">🦵</span><span class="joint-label">Knee</span></button>
+      <button class="joint-btn" onclick="selectJoint('ankle',this)"><span class="joint-icon">🦶</span><span class="joint-label">Ankle</span></button>
+      <button class="joint-btn" onclick="selectJoint('elbow',this)"><span class="joint-icon">💪</span><span class="joint-label">Elbow</span></button>
+      <button class="joint-btn" onclick="selectJoint('hand',this)"><span class="joint-icon">✋</span><span class="joint-label">Hand/Wrist</span></button>
+      <button class="joint-btn" onclick="selectJoint('neck',this)"><span class="joint-icon">🧠</span><span class="joint-label">Neck</span></button>
+      <button class="joint-btn" onclick="selectJoint('hip',this)"><span class="joint-icon">🏃</span><span class="joint-label">Hip</span></button>
+    </div>
+  </div>
+  <div class="form-wrap" id="assessment-form"></div>
+  <div class="action-row">
+    <button class="btn-main btn-save" onclick="saveAssessment()">💾 Save</button>
+    <button class="btn-main btn-print" onclick="window.print()">🖨️ Print</button>
+    <button class="btn-main btn-clear" onclick="clearForm()">↺ Clear</button>
+  </div>
+</div>
+
+<!-- PAGE: RECORDS -->
+<div class="page" id="page-records">
+  <div class="rec-page-header">
+    <div class="rec-search-row">
+      <input class="rec-search" type="text" id="rec-search-input" placeholder="🔍  Search name, joint, diagnosis..." oninput="renderRecords()">
+      <select class="rec-filter" id="rec-filter-sel" onchange="renderRecords()">
+        <option value="">All Joints</option>
+        <option value="shoulder">🫁 Shoulder</option>
+        <option value="spine">🦴 Lumbar</option>
+        <option value="knee">🦵 Knee</option>
+        <option value="ankle">🦶 Ankle</option>
+        <option value="elbow">💪 Elbow</option>
+        <option value="hand">✋ Hand</option>
+        <option value="neck">🧠 Neck</option>
+        <option value="hip">🏃 Hip</option>
+      </select>
+    </div>
+    <div class="stats-row" id="rec-stats"></div>
+  </div>
+  <div class="rec-export-row">
+    <button class="rec-export-btn" onclick="exportCSV()">📥 Export All as CSV</button>
+    <button class="rec-export-btn" onclick="exportJSON()" style="color:var(--blue)">💾 Backup (JSON)</button>
+    <button class="rec-export-btn" onclick="importJSON()" style="color:var(--amber)">📤 Restore Backup</button>
+  </div>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+  <div class="rec-list" id="records-list"></div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <button class="modal-close-btn" onclick="closeModal()">✕ Close</button>
+      <div class="modal-head-title" id="modal-title">Assessment</div>
+      <button class="modal-print-btn" onclick="window.print()">🖨️ Print</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+// DATA STORE — uses IndexedDB (works in file:// and hosted)
+// ─────────────────────────────────────────────────────────────────
+let DB_STORE = [];  // in-memory cache
+let db = null;
+
+function initDB() {
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open('JointSpaceDB', 1);
+      req.onupgradeneeded = e => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains('assessments')) {
+          d.createObjectStore('assessments', { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = e => {
+        db = e.target.result;
+        loadAllFromDB().then(records => {
+          DB_STORE = records;
+          updateBadge();
+          resolve();
+        });
+      };
+      req.onerror = () => {
+        // Fallback: use in-memory only
+        resolve();
+      };
+    } catch(e) { resolve(); }
+  });
+}
+
+function loadAllFromDB() {
+  return new Promise((resolve) => {
+    if (!db) { resolve(DB_STORE); return; }
+    try {
+      const tx = db.transaction('assessments', 'readonly');
+      const store = tx.objectStore('assessments');
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve([]);
+    } catch(e) { resolve([]); }
+  });
+}
+
+function saveRecordToDB(record) {
+  return new Promise((resolve) => {
+    if (!db) {
+      // In-memory fallback
+      const idx = DB_STORE.findIndex(r => r.id === record.id);
+      if (idx >= 0) DB_STORE[idx] = record; else DB_STORE.unshift(record);
+      resolve();
+      return;
+    }
+    try {
+      const tx = db.transaction('assessments', 'readwrite');
+      const store = tx.objectStore('assessments');
+      store.put(record);
+      tx.oncomplete = () => {
+        const idx = DB_STORE.findIndex(r => r.id === record.id);
+        if (idx >= 0) DB_STORE[idx] = record; else DB_STORE.unshift(record);
+        resolve();
+      };
+      tx.onerror = () => resolve();
+    } catch(e) { resolve(); }
+  });
+}
+
+function deleteRecordFromDB(id) {
+  return new Promise((resolve) => {
+    DB_STORE = DB_STORE.filter(r => r.id !== id);
+    if (!db) { resolve(); return; }
+    try {
+      const tx = db.transaction('assessments', 'readwrite');
+      tx.objectStore('assessments').delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    } catch(e) { resolve(); }
+  });
+}
+
+function updateBadge() {
+  const n = DB_STORE.length;
+  const badge = document.getElementById('rec-badge');
+  if (badge) { badge.textContent = n; badge.className = 'tab-badge' + (n > 0 ? ' show' : ''); }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// JOINT CONFIG
+// ─────────────────────────────────────────────────────────────────
+const JOINTS = {
+  shoulder:{label:'Shoulder',icon:'🫁',
+    conditions:['Rotator Cuff Tear','Frozen Shoulder','Shoulder Impingement','AC Joint Injury','Shoulder Dislocation','SLAP Lesion','Biceps Tendinopathy','Other'],
+    rom:[['Flexion','0–180°'],['Extension','0–60°'],['Abduction','0–180°'],['Internal Rotation','0–70°'],['External Rotation','0–90°'],['Horizontal Adduction','0–130°']],
+    muscles:[['Supraspinatus','Abduction'],['Infraspinatus','External Rotation'],['Subscapularis','Internal Rotation'],['Deltoid (Ant/Mid/Post)','Flex/Abd/Ext'],['Trapezius (Lower)','Scapular stability'],['Serratus Anterior','Protraction'],['Biceps Brachii','Flexion/Supination']],
+    tests:[['Neer Impingement','Impingement'],['Hawkins-Kennedy','Impingement'],['Empty Can (Jobe)','Supraspinatus'],['Drop Arm Test','RC tear'],['Lift-Off (Gerber)','Subscapularis'],['Speed Test','Biceps'],['O\'Brien Test','SLAP'],['Apprehension Test','Anterior instability'],['Relocation Test','Anterior instability'],['Sulcus Sign','Inferior instability'],['AC Shear Test','AC joint'],['FADIR (shoulder)','Posterior impingement']]},
+  spine:{label:'Lumbar Spine & SI',icon:'🦴',
+    conditions:['Lumbar Disc Herniation','Spinal Stenosis','Spondylolisthesis','SI Joint Dysfunction','Facet Syndrome','Lower Crossed Syndrome','Muscle Strain','Other'],
+    rom:[['Flexion (FTF)','0–10cm FTF'],['Extension','20–30°'],['Lateral Flexion L','15–25°'],['Lateral Flexion R','15–25°'],['Rotation L','30–45°'],['Rotation R','30–45°'],['SLR L','70–80°'],['SLR R','70–80°']],
+    muscles:[['Lumbar Extensors','Extension'],['Multifidus','Segmental stability'],['Rectus Abdominis','Flexion'],['Obliques','Rotation'],['Transverse Abdominis','Core stability'],['Gluteus Maximus','Hip extension'],['Gluteus Medius','Hip abduction'],['Iliopsoas','Hip flexion'],['Hamstrings','Pelvic tilt']],
+    tests:[['Gillet\'s Test','SI joint mobility'],['FABER Test','SI/Hip'],['FADIR Test','Hip impingement'],['Slump Test','Neural tension'],['SLR (Neural)','Sciatic nerve'],['Well Leg Raise','Crossed SLR'],['Prone Instability','Segmental instability'],['Kemp\'s Test','Facet joint'],['Quadrant Test','Facet/foraminal'],['Trendelenburg','Glut Med weakness'],['Sacral Compression','SI joint'],['Gaenslen\'s Test','SI joint']]},
+  knee:{label:'Knee',icon:'🦵',
+    conditions:['ACL Tear','PCL Tear','Meniscus Tear','MCL Injury','LCL Injury','Patellofemoral Pain','Osteoarthritis','Patellar Tendinopathy','IT Band Syndrome','Other'],
+    rom:[['Flexion','0–135°'],['Extension','0°(full)'],['Internal Rotation','~30°'],['External Rotation','~40°']],
+    muscles:[['Quadriceps / VMO','Extension'],['Hamstrings','Flexion'],['Popliteus','Unlocking / IR'],['Gastrocnemius','Plantarflexion/Knee flex'],['TFL / ITB','Lateral stabilisation'],['Sartorius','Knee flexion/IR']],
+    tests:[['Lachman Test','ACL (most sensitive)'],['Anterior Drawer','ACL'],['Pivot Shift','ACL rotatory'],['Posterior Drawer','PCL'],['Posterior Sag Sign','PCL'],['McMurray Test','Meniscus'],['Thessaly Test','Meniscus'],['Apley Compression','Meniscus'],['Valgus Stress','MCL'],['Varus Stress','LCL'],['Clarke\'s Sign','Patellofemoral'],['Noble Compression','IT Band']]},
+  ankle:{label:'Ankle & Foot',icon:'🦶',
+    conditions:['Lateral Ankle Sprain','Achilles Tendinopathy','Achilles Rupture','Plantar Fasciitis','Peroneal Tendon Injury','Syndesmosis Injury','Sinus Tarsi','Other'],
+    rom:[['Dorsiflexion','0–20°'],['Plantarflexion','0–50°'],['Inversion','0–35°'],['Eversion','0–15°'],['Subtalar Inversion','0–35°'],['1st MTP Extension','70°']],
+    muscles:[['Tibialis Anterior','Dorsiflexion'],['Peroneus Longus','Eversion'],['Peroneus Brevis','Eversion'],['Gastrocnemius','Plantarflexion'],['Soleus','Plantarflexion'],['Tibialis Posterior','Inversion/Arch'],['Flexor Digitorum L.','Toe flexion']],
+    tests:[['Anterior Drawer (Ankle)','ATFL'],['Talar Tilt Test','CFL'],['Thompson Test','Achilles rupture'],['Squeeze Test','Syndesmosis'],['Kleiger Test','Syndesmosis'],['Windlass Test','Plantar fasciitis'],['Navicular Drop','Pes planus'],['Single Leg Heel Raise','Achilles/Calf strength'],['Star Excursion','Proprioception'],['Peroneal Compression','Peroneal tendon']]},
+  elbow:{label:'Elbow',icon:'💪',
+    conditions:['Lateral Epicondylitis','Medial Epicondylitis','UCL Injury','Cubital Tunnel Syndrome','Olecranon Bursitis','Biceps Tendon Rupture','Radial Head Fracture','Other'],
+    rom:[['Flexion','0–145°'],['Extension','0°(full)'],['Supination','0–80°'],['Pronation','0–80°']],
+    muscles:[['Biceps Brachii','Flexion/Supination'],['Brachialis','Flexion'],['Triceps Brachii','Extension'],['Supinator','Supination'],['Pronator Teres','Pronation'],['Wrist Extensors (ECRB)','Wrist extension'],['Wrist Flexors (FCU)','Wrist flexion']],
+    tests:[['Cozen\'s Test','Lateral epicondylitis'],['Mill\'s Test','Lateral epicondylitis'],['Chair Test','Lateral epicondylitis'],['Medial Epicondyle Palpation','Medial epicondylitis'],['Valgus Stress','UCL'],['Moving Valgus Stress','UCL overhead'],['Elbow Flexion Test','Cubital tunnel'],['Tinel\'s (Elbow)','Ulnar nerve'],['Hook Test','Distal biceps']]},
+  hand:{label:'Hand & Wrist',icon:'✋',
+    conditions:['De Quervain\'s','Carpal Tunnel Syndrome','Trigger Finger','Scaphoid Fracture','TFCC Injury','Wrist Sprain','Mallet Finger','Dupuytren\'s','Other'],
+    rom:[['Wrist Flexion','0–80°'],['Wrist Extension','0–70°'],['Radial Deviation','0–20°'],['Ulnar Deviation','0–30°'],['Thumb Opposition','Full/Partial'],['Grip Strength','kg']],
+    muscles:[['Wrist Flexors (FCR/FCU)','Wrist flexion'],['Wrist Extensors','Wrist extension'],['Thenar Muscles','Opposition'],['Flexor Pollicis L.','Thumb IP flexion'],['Abductor Pollicis L.','Thumb abduction'],['Interossei / Lumbricals','Finger intrinsics']],
+    tests:[['Finkelstein\'s','De Quervain\'s'],['Phalen\'s Test','Carpal tunnel'],['Tinel\'s (Wrist)','Median nerve'],['Scaphoid Tenderness (ASB)','Scaphoid fracture'],['Watson\'s Shift','Scaphoid instability'],['TFCC Grind Test','TFCC injury'],['Ulnar Fovea Sign','TFCC/Ulnar'],['Allen\'s Test','Vascular'],['Froment\'s Sign','Ulnar nerve'],['CMC Grind','CMC OA']]},
+  neck:{label:'Cervical Spine',icon:'🧠',
+    conditions:['Cervical Spondylosis','Cervical Disc Herniation','Cervicogenic Headache','Whiplash','Cervical Radiculopathy','Cervical Myelopathy','Torticollis','Other'],
+    rom:[['Flexion','0–45°'],['Extension','0–45°'],['Lateral Flexion L','0–45°'],['Lateral Flexion R','0–45°'],['Rotation L','0–60°'],['Rotation R','0–60°']],
+    muscles:[['SCM','Flexion/Rotation'],['Upper Trapezius','Elevation/Lateral flex'],['Levator Scapulae','Elevation'],['Scalenes','Lateral flexion'],['Deep Neck Flexors','Cervical stability'],['Suboccipitals','Upper cervical extension']],
+    tests:[['Spurling\'s Test','Cervical radiculopathy'],['Cervical Distraction','Radiculopathy'],['ULTT1 (Median)','C5-C7 / Median nerve'],['ULTT2b (Radial)','Radial nerve'],['ULTT3 (Ulnar)','Ulnar nerve'],['Lhermitte\'s Sign','Myelopathy'],['Hoffman\'s Sign','UMN/Myelopathy'],['Sharp-Purser Test','C1-C2 instability'],['VBI Screen','Vertebrobasilar'],['Cervical Flex-Rotation','C1-C2 / CGH']]},
+  hip:{label:'Hip',icon:'🏃',
+    conditions:['Hip Osteoarthritis','FAI (Femoroacetabular)','Hip Labral Tear','Greater Trochanteric Bursitis','Piriformis Syndrome','Gluteal Tendinopathy','Snapping Hip','Hip Flexor Strain','Other'],
+    rom:[['Flexion','0–120°'],['Extension','0–30°'],['Abduction','0–45°'],['Adduction','0–30°'],['Internal Rotation','0–45°'],['External Rotation','0–45°'],['SLR','70–90°']],
+    muscles:[['Gluteus Maximus','Extension/ER'],['Gluteus Medius','Abduction'],['Gluteus Minimus','Abduction/IR'],['Iliopsoas','Hip flexion'],['TFL','Flexion/Abduction'],['Piriformis','ER/Abduction'],['Hip Adductors','Adduction'],['Hamstrings','Extension/Knee flex']],
+    tests:[['FABER Test','Hip/SI joint'],['FADIR Test','FAI/Labral'],['Thomas Test','Hip flexor tightness'],['Ober\'s Test','TFL/ITB'],['Trendelenburg Test','Glut Med weakness'],['Piriformis Test','Piriformis syndrome'],['Scour Test','Hip joint'],['Anterior Impingement','FAI'],['Posterior Impingement','Posterior FAI'],['Single Leg Squat','Functional stability']]}
+};
+
+let currentJoint = 'shoulder';
+
+// ─────────────────────────────────────────────────────────────────
+// PAGE / TAB SWITCHING
+// ─────────────────────────────────────────────────────────────────
+function switchPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  btn.classList.add('active');
+  if (page === 'records') renderRecords();
+}
+
+function selectJoint(joint, btn) {
+  currentJoint = joint;
+  document.querySelectorAll('.joint-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildForm(joint);
+}
+
+function toggleSection(id) {
+  const body = document.getElementById('sb-'+id);
+  const icon = document.getElementById('si-'+id);
+  body.classList.toggle('open');
+  icon.classList.toggle('open');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// IMAGE UPLOAD
+// ─────────────────────────────────────────────────────────────────
+function triggerUpload(id) { document.getElementById(id).click(); }
+function handleImageUpload(inputId, previewId) {
+  const files = Array.from(document.getElementById(inputId).files);
+  const preview = document.getElementById(previewId);
+  files.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const id2 = 'img_' + Date.now() + Math.random().toString(36).slice(2,6);
+      const div = document.createElement('div');
+      div.className = 'img-thumb'; div.id = id2;
+      div.innerHTML = `<img src="${e.target.result}"><button class="del-img" onclick="document.getElementById('${id2}').remove()">✕</button>`;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById(inputId).value = '';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────
+function selectOpt(el) {
+  el.closest('.radio-group').querySelectorAll('.radio-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function togglePosNeg(btn, val) {
+  btn.closest('.posneg').querySelectorAll('.pn-btn').forEach(b => b.className='pn-btn');
+  btn.classList.add(val);
+}
+function updateNPRS(slider, dispId) {
+  const v = slider.value;
+  document.getElementById(dispId).textContent = v + '/10';
+  slider.style.setProperty('--val', (v*10)+'%');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// BUILD FORM
+// ─────────────────────────────────────────────────────────────────
+function buildForm(joint) {
+  const cfg = JOINTS[joint];
+  const wrap = document.getElementById('assessment-form');
+  wrap.innerHTML = `
+    <div style="background:linear-gradient(90deg,var(--green-light),var(--surface));border-radius:12px;padding:11px 13px;margin-bottom:11px;border:1px solid var(--border)">
+      <div style="font-family:'Crimson Pro',serif;font-size:16px;font-weight:600;color:var(--ink2)">Physiotherapy Assessment Proforma</div>
+      <div style="font-size:12px;color:var(--ink3);font-style:italic">${cfg.label}</div>
+      <div style="display:flex;gap:9px;margin-top:8px">
+        <div style="flex:1"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em">Date</span><br>
+          <input type="date" id="f-date" style="width:100%;border:none;border-bottom:1.5px solid var(--border2);background:transparent;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--ink);outline:none;padding:3px 0"></div>
+        <div style="flex:1"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em">Physiotherapist</span><br>
+          <input type="text" id="f-physio" placeholder="Name" style="width:100%;border:none;border-bottom:1.5px solid var(--border2);background:transparent;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--ink);outline:none;padding:3px 0"></div>
+      </div>
+    </div>
+    ${sec(1,'PATIENT DEMOGRAPHICS',demographics())}
+    ${sec(2,'CHIEF COMPLAINTS',complaints(cfg))}
+    ${sec(3,'HISTORY OF PRESENT ILLNESS',history())}
+    ${sec(4,'PAIN PROFILE (NPRS)',painProfile())}
+    ${sec(5,'PAST MEDICAL & DRUG HISTORY',pastHistory())}
+    ${sec(6,'POSTURAL ASSESSMENT',posture(joint))}
+    ${sec(7,'PALPATION FINDINGS',palpation(joint))}
+    ${sec(8,'RANGE OF MOTION',rom(cfg))}
+    ${sec(9,'MANUAL MUSCLE TESTING',mmt(cfg))}
+    ${sec(10,'SPECIAL TESTS',specialTests(cfg))}
+    ${sec(11,'NEUROLOGICAL SCREENING',neuro())}
+    ${sec(12,'INVESTIGATIONS & IMAGING',investigations())}
+    ${sec(13,'CLINICAL IMPRESSION & DIAGNOSIS',diagnosis(cfg))}
+    ${sec(14,'GOALS OF TREATMENT',goals())}
+    ${sec(15,'TREATMENT PLAN',treatmentPlan())}
+    ${sec(16,'CLINICIAN SIGN-OFF',signOff())}
+  `;
+  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+  toggleSection(1);
+}
+
+function sec(n, title, body) {
+  return `<div class="section-card">
+    <div class="section-head" onclick="toggleSection(${n})">
+      <span class="section-num">${n}</span>
+      <span class="section-title">${title}</span>
+      <span class="section-toggle" id="si-${n}">▼</span>
+    </div>
+    <div class="section-body" id="sb-${n}">${body}</div>
+  </div>`;
+}
+
+function demographics() {
+  return `<div class="field-row"><div class="field-group"><label class="field-label">Patient Name *</label><input class="field-input" id="f-name" type="text" placeholder="Full name"></div>
+  <div class="field-group"><label class="field-label">Case No.</label><input class="field-input" id="f-case" type="text" placeholder="Case #"></div></div>
+  <div class="field-row three">
+    <div class="field-group"><label class="field-label">Age</label><input class="field-input" id="f-age" type="number" placeholder="Years"></div>
+    <div class="field-group"><label class="field-label">Sex</label><select class="field-select" id="f-sex"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+    <div class="field-group"><label class="field-label">Contact</label><input class="field-input" id="f-contact" type="tel" placeholder="Phone"></div>
+  </div>
+  <div class="field-row">
+    <div class="field-group"><label class="field-label">Referred By</label><input class="field-input" id="f-ref" type="text" placeholder="Doctor / Self"></div>
+    <div class="field-group"><label class="field-label">Occupation</label><input class="field-input" id="f-occ" type="text" placeholder="Occupation"></div>
+  </div>
+  <div class="field-group"><label class="field-label">Address</label><input class="field-input" id="f-addr" type="text" placeholder="Address"></div>`;
+}
+
+function complaints(cfg) {
+  return `<div class="field-group"><label class="field-label">Working Diagnosis *</label>
+    <select class="field-select" id="f-diag"><option value="">Select condition...</option>${cfg.conditions.map(c=>`<option>${c}</option>`).join('')}</select></div>
+  <div class="field-group"><label class="field-label">Chief Complaint</label><textarea class="field-textarea" id="f-complaint" placeholder="Pain description in patient's own words..."></textarea></div>
+  <div class="field-row">
+    <div class="field-group"><label class="field-label">Side Affected</label><div class="radio-group">
+      ${['Left','Right','Bilateral','Central'].map(o=>`<label class="radio-opt" onclick="selectOpt(this)">${o}</label>`).join('')}
+    </div></div>
+    <div class="field-group"><label class="field-label">Duration</label><input class="field-input" id="f-dur" type="text" placeholder="e.g. 3 weeks, 6 months"></div>
+  </div>
+  <div class="field-group"><label class="field-label">Onset</label><div class="radio-group">
+    ${['Sudden (Traumatic)','Gradual (Insidious)','Post-surgical','Recurrent'].map(o=>`<label class="radio-opt" onclick="selectOpt(this)">${o}</label>`).join('')}
+  </div></div>
+  <div class="field-row">
+    <div class="field-group"><label class="field-label">Aggravating Factors</label><textarea class="field-textarea" id="f-agg" placeholder="Activities that worsen..."></textarea></div>
+    <div class="field-group"><label class="field-label">Relieving Factors</label><textarea class="field-textarea" id="f-rel" placeholder="What helps..."></textarea></div>
+  </div>`;
+}
+
+function history() {
+  return `<div class="field-group"><label class="field-label">History of Present Illness</label><textarea class="field-textarea" id="f-hopi" placeholder="Detailed account of onset and progression..." style="min-height:90px"></textarea></div>
+  <div class="field-row">
+    <div class="field-group"><label class="field-label">Previous Treatment</label><textarea class="field-textarea" placeholder="Physio, injections, surgery..."></textarea></div>
+    <div class="field-group"><label class="field-label">Radiation / Referred Pain</label><textarea class="field-textarea" placeholder="Does pain radiate? Where?"></textarea></div>
+  </div>
+  <div class="field-group"><label class="field-label">Neurological Symptoms</label><div class="radio-group">
+    ${['None','Tingling','Numbness','Weakness','Burning','Positional only'].map(o=>`<label class="radio-opt" onclick="selectOpt(this)">${o}</label>`).join('')}
+  </div></div>
+  <div class="field-group"><label class="field-label">Night Pain</label><div class="radio-group">
+    ${['None','Mild – not waking','Wakes from sleep','Constant at night'].map(o=>`<label class="radio-opt" onclick="selectOpt(this)">${o}</label>`).join('')}
+  </div></div>`;
+}
+
+function painProfile() {
+  const rows = [['At Rest',0],['On Movement',3],['At Worst',5],['At Best',1],['Morning Stiffness',2]];
+  return rows.map(([lbl,def],i) => {
+    const sid='nprs_'+i, did='nprsv_'+i;
+    return `<div class="field-group"><label class="field-label">${lbl}</label>
+    <div class="nprs-wrap"><input type="range" class="nprs-slider" id="${sid}" min="0" max="10" value="${def}" oninput="updateNPRS(this,'${did}')">
+    <div class="nprs-val" id="${did}">${def}/10</div></div></div>`;
+  }).join('') +
+  `<div class="field-group"><label class="field-label">Pain Character</label><div class="radio-group">
+    ${['Sharp','Dull Ache','Burning','Throbbing','Stabbing','Heaviness','Stiffness','Clicking'].map(o=>`<label class="radio-opt" onclick="selectOpt(this)">${o}</label>`).join('')}
+  </div></div>`;
+}
+
+function pastHistory() {
+  return `<div class="field-row">
+    <div class="field-group"><label class="field-label">Medical History</label><textarea class="field-textarea" placeholder="DM, HTN, osteoporosis..."></textarea></div>
+    <div class="field-group"><label class="field-label">Surgical History</label><textarea class="field-textarea" placeholder="Relevant surgeries..."></textarea></div>
+  </div>
+  <div class="field-row">
+    <div class="field-group"><label class="field-label">Current Medications</label><textarea class="field-textarea" placeholder="Analgesics, NSAIDs..."></textarea></div>
+    <div class="field-group"><label class="field-label">Allergies</label><input class="field-input" type="text" placeholder="Drug / material allergies"></div>
+  </div>
+  <div class="field-group"><label class="field-label">Red Flags</label><div class="radio-group">
+    ${['None identified','Unexplained weight loss','Night sweats','Constant night pain','UMN signs','Saddle anaesthesia','Bowel/Bladder dysfunction'].map(o=>`<label class="radio-opt" onclick="selectOpt(this)">${o}</label>`).join('')}
+  </div></div>`;
+}
+
+function posture(joint) {
+  const map={shoulder:[['Head Position','Forward / Neutral'],['Shoulder Level','Equal / Asymmetric'],['Scapular Position','WNL / Winging / Protracted'],['Thoracic Kyphosis','WNL / Increased'],['Cervical Tilt','Neutral / Left / Right']],
+    spine:[['Lumbar Lordosis','WNL / Increased / Decreased'],['Pelvic Tilt','Neutral / Ant / Post / Lateral'],['Scoliosis','None / Left / Right'],['PSIS Level','Equal / Asymmetric'],['Leg Length','Equal / LLD']],
+    knee:[['Patellar Position','Neutral / Squinting / Lateral'],['Tibiofemoral Align','Valgus / Varus / Neutral'],['Q Angle','WNL / Increased'],['Foot Posture','Neutral / Pronated / Supinated']],
+    ankle:[['Foot Arch','Neutral / Pes planus / Pes cavus'],['Hindfoot','Neutral / Valgus / Varus'],['Forefoot','Neutral / Abducted / Adducted'],['Ankle Swelling','None / Present']],
+    elbow:[['Carrying Angle','WNL / Cubitus valgus / Varus'],['Elbow Position','Extended / Flexion contracture'],['Swelling','None / Present – location']],
+    hand:[['Wrist Position','Neutral / Flexed / Deviated'],['Finger Alignment','Neutral / Deviation'],['Thenar Wasting','None / Present'],['Dupuytren\'s','None / Present']],
+    neck:[['Head Position','Neutral / Forward head posture'],['Cervical Lordosis','WNL / Reduced / Reversed'],['Shoulder Level','Equal / Asymmetric'],['Ear-Shoulder','Equal / Asymmetric']],
+    hip:[['Pelvic Tilt','Neutral / Ant / Post / Lateral'],['Trendelenburg','Absent / Present'],['Leg Length','Equal / LLD'],['Gait Pattern','WNL / Trendelenburg / Antalgic']]};
+  const items = map[joint]||map.spine;
+  const rows = items.map(([p,n])=>`<tr><td class="row-label">${p}</td><td><input type="text" placeholder="${n}"></td><td><input type="text" placeholder="Clinical significance..."></td></tr>`).join('');
+  return `<div class="sub-head">📷 Upload Postural Photos</div>
+  <div class="img-upload-area" onclick="triggerUpload('posture-upload')">
+    <input type="file" id="posture-upload" accept="image/*" multiple onchange="handleImageUpload('posture-upload','posture-preview')">
+    <div class="img-upload-icon">📸</div>
+    <div class="img-upload-text">Tap to upload postural photos</div>
+    <div class="img-upload-sub">Anterior · Posterior · Lateral views</div>
+  </div>
+  <div class="img-previews" id="posture-preview"></div>
+  <div class="sub-head" style="margin-top:10px">📋 Postural Findings</div>
+  <div class="table-wrap"><table class="assess-table">
+    <thead><tr><th>Parameter</th><th>Finding</th><th>Clinical Significance</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="field-group" style="margin-top:7px"><label class="field-label">Additional Postural Notes</label><textarea class="field-textarea" placeholder="Any additional postural observations..."></textarea></div>`;
+}
+
+function palpation(joint) {
+  const map={shoulder:['Supraspinatus tendon','Infraspinatus tendon','Biceps tendon (bicipital groove)','AC Joint','Coracoid Process','Deltoid (Ant/Mid/Post)','Upper Trapezius','Rhomboids'],
+    spine:['Lumbar Paraspinals (L1-L5)','Lumbar Spinous Processes','Lumbar Facet Joints','Multifidus','PSIS','Sacral Sulcus','Iliac Crest','Piriformis','Gluteus Medius','Hamstrings (proximal)'],
+    knee:['Medial Joint Line','Lateral Joint Line','MCL','LCL','Patellar Tendon','Quadriceps Tendon','Pes Anserine','IT Band','Tibial Tubercle','Popliteal Fossa'],
+    ankle:['ATFL','CFL','Deltoid Ligament','Achilles Tendon','Achilles Insertion','Peroneus Longus/Brevis','Tibialis Posterior','Plantar Fascia Origin','Sinus Tarsi'],
+    elbow:['Lateral Epicondyle','Medial Epicondyle','Olecranon','Radial Head','Biceps Tendon (distal)','Ulnar Nerve (medial groove)','Triceps Tendon'],
+    hand:['Radial Styloid / 1st Dorsal Compartment','Anatomical Snuffbox (Scaphoid)','TFCC (Ulnar side)','Carpal Tunnel Area','MCP Joints','PIP Joints','Thenar Eminence'],
+    neck:['C1-C7 Spinous Processes','Cervical Facet Joints','Upper Trapezius','Levator Scapulae','SCM','Scalenes','Suboccipital Region'],
+    hip:['ASIS','Greater Trochanter','Trochanteric Bursa','IT Band','Piriformis','Gluteus Medius insertion','Ischial Tuberosity','Groin / Inguinal Area']};
+  const items = map[joint]||map.spine;
+  const opts = `<option value="">—</option><option>Grade 0</option><option>Grade 1 – Mild</option><option>Grade 2 – Moderate</option><option>Grade 3 – Severe</option><option>N/A</option>`;
+  const rows = items.map(item=>`<tr><td class="row-label">${item}</td>
+    <td><select style="min-width:90px;border:none;border-bottom:1.5px solid var(--border2);background:transparent;font-family:'Nunito',sans-serif;font-size:11px;outline:none;padding:2px">${opts}</select></td>
+    <td><select style="min-width:90px;border:none;border-bottom:1.5px solid var(--border2);background:transparent;font-family:'Nunito',sans-serif;font-size:11px;outline:none;padding:2px">${opts}</select></td>
+    <td><input type="text" placeholder="Notes..."></td></tr>`).join('');
+  return `<div class="table-wrap"><table class="assess-table">
+    <thead><tr><th>Structure</th><th>Left</th><th>Right</th><th>Comments</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function rom(cfg) {
+  const rows = cfg.rom.map(([m,n])=>`<tr><td class="row-label">${m}</td>
+    <td style="color:var(--ink3);font-size:11px">${n}</td>
+    <td><input type="text" placeholder="Active"></td>
+    <td><input type="text" placeholder="Passive"></td>
+    <td><select style="min-width:70px;border:none;border-bottom:1.5px solid var(--border2);background:transparent;font-family:'Nunito',sans-serif;font-size:11px;outline:none;padding:2px"><option>WNL</option><option>Reduced</option><option>Increased</option><option>Painful arc</option><option>Not tested</option></select></td>
+    <td><input type="text" placeholder="Notes..."></td></tr>`).join('');
+  return `<div class="table-wrap"><table class="assess-table">
+    <thead><tr><th>Motion</th><th>Normal</th><th>Active</th><th>Passive</th><th>Status</th><th>Comments</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="field-group" style="margin-top:7px"><label class="field-label">End Feel Notes</label><textarea class="field-textarea" placeholder="Describe end feel for restricted motions..."></textarea></div>`;
+}
+
+function mmt(cfg) {
+  const mrcOpts = `<option>—</option><option>0/5</option><option>1/5</option><option>2/5</option><option>3/5</option><option>4/5</option><option>5/5</option><option>NA</option>`;
+  const rows = cfg.muscles.map(([m,a])=>`<tr><td class="row-label">${m}<br><span style="font-size:10px;color:var(--muted)">${a}</span></td>
+    <td><select style="min-width:55px;border:none;border-bottom:1.5px solid var(--border2);background:transparent;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;outline:none;padding:2px">${mrcOpts}</select></td>
+    <td><select style="min-width:55px;border:none;border-bottom:1.5px solid var(--border2);background:transparent;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;outline:none;padding:2px">${mrcOpts}</select></td>
+    <td><input type="text" placeholder="Notes..."></td></tr>`).join('');
+  return `<div class="table-wrap"><table class="assess-table">
+    <thead><tr><th>Muscle / Action</th><th>Left</th><th>Right</th><th>Comments</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="field-group" style="margin-top:7px"><label class="field-label">Muscle Imbalance Pattern</label><textarea class="field-textarea" placeholder="Overactive/tight vs underactive/weak muscles..."></textarea></div>`;
+}
+
+function specialTests(cfg) {
+  const rows = cfg.tests.map(([t,p])=>`<tr>
+    <td class="row-label">${t}<br><span style="font-size:10px;color:var(--muted)">${p}</span></td>
+    <td><div class="posneg"><button class="pn-btn" onclick="togglePosNeg(this,'pos')">POS</button><button class="pn-btn" onclick="togglePosNeg(this,'neg')">NEG</button><button class="pn-btn" onclick="togglePosNeg(this,'na')">N/A</button></div></td>
+    <td><div class="posneg"><button class="pn-btn" onclick="togglePosNeg(this,'pos')">POS</button><button class="pn-btn" onclick="togglePosNeg(this,'neg')">NEG</button><button class="pn-btn" onclick="togglePosNeg(this,'na')">N/A</button></div></td>
+    <td><input type="text" placeholder="Findings..."></td></tr>`).join('');
+  return `<div class="table-wrap"><table class="assess-table">
+    <thead><tr><th>Test & Purpose</th><th>Left</th><th>Right</th><th>Findings</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function neuro() {
+  const tests=[['Dermatomal Sensation','Specify level'],['Myotome Testing','Specify level'],['Deep Tendon Reflexes','Grade 0–4+'],['Proprioception','WNL / Impaired'],['Clonus','Absent / Present'],['Babinski Sign','Normal / Extensor'],['Hoffman\'s Sign','Absent / Present'],['Grip Strength','kg']];
+  const rows = tests.map(([t,n])=>`<tr><td class="row-label">${t}<br><span style="font-size:10px;color:var(--muted)">${n}</span></td>
+    <td><input type="text" placeholder="Finding..."></td><td><input type="text" placeholder="Finding..."></td>
+    <td><input type="text" placeholder="Notes..."></td></tr>`).join('');
+  return `<div class="table-wrap"><table class="assess-table">
+    <thead><tr><th>Assessment</th><th>Left</th><th>Right</th><th>Comments</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="field-group" style="margin-top:7px"><label class="field-label">Neurological Impression</label><textarea class="field-textarea" id="f-neuro" placeholder="Summary of neurological findings..."></textarea></div>`;
+}
+
+function investigations() {
+  const invs=['X-Ray (AP/Lateral)','MRI','CT Scan','Ultrasound','Blood Investigations (ESR/CRP)','EMG/NCS','Bone Scan','Other'];
+  const rows = invs.map(inv=>`<tr><td class="row-label">${inv}</td>
+    <td><select style="min-width:100px;border:none;border-bottom:1.5px solid var(--border2);background:transparent;font-family:'Nunito',sans-serif;font-size:11px;outline:none;padding:2px">
+      <option>—</option><option>Pending</option><option>Done – Normal</option><option>Done – Abnormal</option><option>Recommended</option><option>Not indicated</option>
+    </select></td>
+    <td><input type="text" placeholder="Findings..."></td></tr>`).join('');
+  return `<div class="sub-head">🩻 Upload Investigation Images / Reports</div>
+  <div class="img-upload-area" onclick="triggerUpload('inv-upload')">
+    <input type="file" id="inv-upload" accept="image/*" multiple onchange="handleImageUpload('inv-upload','inv-preview')">
+    <div class="img-upload-icon">🩻</div>
+    <div class="img-upload-text">Tap to upload X-Ray · MRI · CT · Reports</div>
+    <div class="img-upload-sub">JPG or PNG format</div>
+  </div>
+  <div class="img-previews" id="inv-preview"></div>
+  <div class="sub-head" style="margin-top:10px">📋 Investigation Status</div>
+  <div class="table-wrap"><table class="assess-table">
+    <thead><tr><th>Investigation</th><th>Status</th><th>Findings</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function diagnosis(cfg) {
+  return `<div class="field-row">
+    <div class="field-group"><label class="field-label">Primary Diagnosis</label>
+      <select class="field-select" id="f-pdiag"><option value="">Select...</option>${cfg.conditions.map(c=>`<option>${c}</option>`).join('')}</select></div>
+    <div class="field-group"><label class="field-label">Secondary Diagnosis</label><input class="field-input" type="text" placeholder="Secondary diagnosis..."></div>
+  </div>
+  <div class="field-group"><label class="field-label">Differential Diagnosis</label><textarea class="field-textarea" placeholder="List differentials to rule out..."></textarea></div>
+  <div class="field-group"><label class="field-label">Contributing Factors</label><textarea class="field-textarea" placeholder="Muscle imbalance, posture, occupation, lifestyle..."></textarea></div>
+  <div class="field-row">
+    <div class="field-group"><label class="field-label">Prognosis</label><div class="radio-group">
+      ${['Excellent','Good','Fair','Guarded'].map(o=>`<label class="radio-opt" onclick="selectOpt(this)">${o}</label>`).join('')}
+    </div></div>
+    <div class="field-group"><label class="field-label">Red Flags Present</label><div class="radio-group">
+      ${['None','Yes – refer'].map(o=>`<label class="radio-opt" onclick="selectOpt(this)">${o}</label>`).join('')}
+    </div></div>
+  </div>
+  <div class="field-group"><label class="field-label">Clinical Impression</label><textarea class="field-textarea" placeholder="Summarise the clinical picture and reasoning..." style="min-height:85px"></textarea></div>`;
+}
+
+function goals() {
+  return `<div class="sub-head">Short-Term Goals (Week 1–3)</div>
+  ${[1,2,3].map(i=>`<div class="goal-item"><span class="goal-num">ST${i}</span><input class="field-input" type="text" placeholder="Short-term goal ${i}..."></div>`).join('')}
+  <div class="sub-head" style="margin-top:9px">Medium-Term Goals (Week 3–8)</div>
+  ${[1,2,3].map(i=>`<div class="goal-item"><span class="goal-num">MT${i}</span><input class="field-input" type="text" placeholder="Medium-term goal ${i}..."></div>`).join('')}
+  <div class="sub-head" style="margin-top:9px">Long-Term Goals (Week 8–12+)</div>
+  ${[1,2,3].map(i=>`<div class="goal-item"><span class="goal-num">LT${i}</span><input class="field-input" type="text" placeholder="Long-term goal ${i}..."></div>`).join('')}`;
+}
+
+function treatmentPlan() {
+  const phases=[['Phase 1 – Pain Relief (Week 1–3)',['Manual therapy / Mobilisation','Soft tissue release','Electrotherapy (TENS/IFT/US)','Taping / Bracing','Ice / Heat','Patient education']],
+    ['Phase 2 – Rehabilitation (Week 3–8)',['ROM exercises','Strengthening','Proprioception training','Stretching programme','Postural correction']],
+    ['Phase 3 – Functional Return (Week 6–12)',['Functional movement training','Sport-specific rehab','Home exercise programme','Ergonomic advice','Prevention strategy']]];
+  return phases.map(([ph,items])=>`
+    <div class="sub-head">${ph}</div>
+    <div class="table-wrap"><table class="assess-table">
+      <thead><tr><th>Intervention</th><th>Frequency</th><th>Notes</th></tr></thead>
+      <tbody>${items.map(item=>`<tr>
+        <td><label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--ink2);cursor:pointer">
+          <input type="checkbox" style="width:14px;height:14px;accent-color:var(--green)"> ${item}</label></td>
+        <td><input type="text" placeholder="e.g. 3x/week x 10min"></td>
+        <td><input type="text" placeholder="Specific details..."></td>
+      </tr>`).join('')}</tbody></table></div>`).join('');
+}
+
+function signOff() {
+  return `<div class="field-row">
+    <div class="field-group"><label class="field-label">Assessed By</label><input class="field-input" id="f-by" type="text" placeholder="Physiotherapist name"></div>
+    <div class="field-group"><label class="field-label">Designation</label><input class="field-input" id="f-desig" type="text" placeholder="MPT / BPT / Specialisation"></div>
+  </div>
+  <div class="field-row">
+    <div class="field-group"><label class="field-label">Date</label><input class="field-input" type="date"></div>
+    <div class="field-group"><label class="field-label">Next Appointment</label><input class="field-input" type="date"></div>
+  </div>
+  <div class="field-group"><label class="field-label">Additional Notes</label><textarea class="field-textarea" placeholder="Any additional clinical notes..."></textarea></div>
+  <div style="background:var(--green-light);border:1.5px solid var(--green-mid);border-radius:9px;padding:11px;margin-top:7px;font-size:11px;color:var(--ink3);text-align:center;font-weight:700;letter-spacing:0.06em">
+    Joint Space Physiotherapy · Confidential Patient Record · Where Science Meets Movement</div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SAVE / LOAD
+// ─────────────────────────────────────────────────────────────────
+function collectData() {
+  const form = document.getElementById('assessment-form');
+  const d = { joint: currentJoint, jointLabel: JOINTS[currentJoint].label, id: Date.now(),
+    savedAt: new Date().toISOString(),
+    patientName: document.getElementById('f-name')?.value?.trim() || '',
+    caseNo: document.getElementById('f-case')?.value || '',
+    age: document.getElementById('f-age')?.value || '',
+    sex: document.getElementById('f-sex')?.value || '',
+    contact: document.getElementById('f-contact')?.value || '',
+    occupation: document.getElementById('f-occ')?.value || '',
+    referredBy: document.getElementById('f-ref')?.value || '',
+    address: document.getElementById('f-addr')?.value || '',
+    assessDate: document.getElementById('f-date')?.value || new Date().toISOString().slice(0,10),
+    physioName: document.getElementById('f-physio')?.value || '',
+    diagnosis: document.getElementById('f-diag')?.value || '',
+    complaint: document.getElementById('f-complaint')?.value || '',
+    duration: document.getElementById('f-dur')?.value || '',
+    aggravating: document.getElementById('f-agg')?.value || '',
+    relieving: document.getElementById('f-rel')?.value || '',
+    hopi: document.getElementById('f-hopi')?.value || '',
+    neuroImpression: document.getElementById('f-neuro')?.value || '',
+  };
+  // Positive special tests
+  const pos = [];
+  form.querySelectorAll('.pn-btn.pos').forEach(b => {
+    const row = b.closest('tr');
+    if (row) { const lbl = row.querySelector('.row-label'); if(lbl) pos.push(lbl.childNodes[0]?.textContent?.trim()||lbl.textContent.split('\n')[0].trim()); }
+  });
+  d.positiveTests = [...new Set(pos)];
+  // NPRS values
+  const nprsLabels=['At Rest','On Movement','At Worst','At Best','Morning Stiffness'];
+  d.nprs = nprsLabels.map((lbl,i) => ({ label:lbl, value: document.getElementById('nprs_'+i)?.value||'0' }));
+  // Selected radio opts
+  const selOpts = [];
+  form.querySelectorAll('.radio-opt.selected').forEach(el => selOpts.push(el.textContent.trim()));
+  d.selectedOptions = selOpts;
+  // Images
+  const imgs = [];
+  form.querySelectorAll('.img-thumb img').forEach(img => imgs.push(img.src));
+  d.images = imgs;
+  return d;
+}
+
+async function saveAssessment() {
+  const nameEl = document.getElementById('f-name');
+  if (!nameEl?.value?.trim()) { showToast('⚠️ Enter patient name first'); return; }
+  const data = collectData();
+  await saveRecordToDB(data);
+  updateBadge();
+  showToast('✅ Saved – ' + data.patientName);
+}
+
+function clearForm() {
+  if (!confirm('Clear all form data?')) return;
+  buildForm(currentJoint); showToast('↺ Form cleared');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// RENDER RECORDS
+// ─────────────────────────────────────────────────────────────────
+function renderRecords() {
+  const search = (document.getElementById('rec-search-input')?.value||'').toLowerCase();
+  const filter = document.getElementById('rec-filter-sel')?.value||'';
+  const all = DB_STORE.slice().sort((a,b)=> new Date(b.savedAt) - new Date(a.savedAt));
+  const filtered = all.filter(r => {
+    const ms = !search || [r.patientName,r.jointLabel,r.diagnosis,r.caseNo,r.complaint].join(' ').toLowerCase().includes(search);
+    const mf = !filter || r.joint === filter;
+    return ms && mf;
+  });
+
+  // Stats
+  const jc={};
+  all.forEach(r => jc[r.jointLabel]=(jc[r.jointLabel]||0)+1);
+  const top = Object.entries(jc).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+  document.getElementById('rec-stats').innerHTML = `
+    <div class="stat-mini"><div class="sm-val">${all.length}</div><div class="sm-lbl">Total Saved</div></div>
+    <div class="stat-mini"><div class="sm-val">${filtered.length}</div><div class="sm-lbl">Showing</div></div>
+    <div class="stat-mini"><div class="sm-val" style="font-size:14px;line-height:1.2">${top}</div><div class="sm-lbl">Most Assessed</div></div>`;
+
+  const list = document.getElementById('records-list');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state"><div class="ei">${all.length?'🔍':'📭'}</div>
+      <h3>${all.length?'No results found':'No assessments yet'}</h3>
+      <p>${all.length?'Try a different search or filter.':'Fill in the New Assessment tab\nand tap Save to store records here.'}</p></div>`;
+    return;
+  }
+  const icons={shoulder:'🫁',spine:'🦴',knee:'🦵',ankle:'🦶',elbow:'💪',hand:'✋',neck:'🧠',hip:'🏃'};
+  list.innerHTML = filtered.map(r => {
+    const d = new Date(r.assessDate||r.savedAt);
+    const ds = d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+    const pts = (r.positiveTests||[]).slice(0,3);
+    return `<div class="rec-card">
+      <div class="rec-card-top">
+        <span style="font-size:26px">${icons[r.joint]||'🦴'}</span>
+        <div style="flex:1">
+          <div class="rec-name">${r.patientName||'Unnamed'}</div>
+          <div class="rec-date">📅 ${ds}${r.physioName?' · '+r.physioName:''}</div>
+        </div>
+        <span class="rec-joint-badge">${r.jointLabel}</span>
+      </div>
+      <div class="rec-tags">
+        ${r.caseNo?`<span class="rec-tag">Case: ${r.caseNo}</span>`:''}
+        ${r.age?`<span class="rec-tag">Age: ${r.age}${r.sex?' · '+r.sex:''}</span>`:''}
+        ${r.diagnosis?`<span class="rec-tag" style="color:var(--blue)">${r.diagnosis}</span>`:''}
+        ${pts.map(t=>`<span class="rec-tag" style="color:var(--red);border-color:rgba(192,57,43,0.2)">+${t}</span>`).join('')}
+      </div>
+      ${r.complaint?`<div class="rec-complaint">"${r.complaint.slice(0,110)}${r.complaint.length>110?'…':''}"</div>`:''}
+      <div class="rec-actions">
+        <button class="rec-btn rec-view" onclick="viewRecord(${r.id})">👁️ View Full</button>
+        <button class="rec-btn rec-del" onclick="deleteRecord(${r.id})">🗑️ Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteRecord(id) {
+  if (!confirm('Delete this assessment permanently?')) return;
+  await deleteRecordFromDB(id);
+  updateBadge();
+  renderRecords();
+  showToast('🗑️ Deleted');
+}
+
+function viewRecord(id) {
+  const r = DB_STORE.find(x => x.id === id);
+  if (!r) return;
+  const icons={shoulder:'🫁',spine:'🦴',knee:'🦵',ankle:'🦶',elbow:'💪',hand:'✋',neck:'🧠',hip:'🏃'};
+  const d = new Date(r.assessDate||r.savedAt);
+  const ds = d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('modal-title').textContent = (r.patientName||'Patient') + ' – ' + r.jointLabel;
+  let html = `
+    <div style="background:var(--green-light);border-radius:10px;padding:12px 13px;margin-bottom:13px;border:1px solid var(--green-mid)">
+      <div style="font-family:'Crimson Pro',serif;font-size:17px;font-weight:600;color:var(--ink)">Joint Space Physiotherapy</div>
+      <div style="font-size:12px;color:var(--ink3)">Assessment Proforma · ${r.jointLabel}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">📅 ${ds}</div>
+    </div>
+    <div class="view-section"><div class="view-sec-head">👤 PATIENT DEMOGRAPHICS</div>
+    <div class="view-sec-body">
+      ${r.patientName?`<div class="view-field"><strong>Name:</strong> ${r.patientName}</div>`:''}
+      ${r.caseNo?`<div class="view-field"><strong>Case No:</strong> ${r.caseNo}</div>`:''}
+      ${r.age?`<div class="view-field"><strong>Age / Sex:</strong> ${r.age} yrs${r.sex?' · '+r.sex:''}</div>`:''}
+      ${r.contact?`<div class="view-field"><strong>Contact:</strong> ${r.contact}</div>`:''}
+      ${r.occupation?`<div class="view-field"><strong>Occupation:</strong> ${r.occupation}</div>`:''}
+      ${r.referredBy?`<div class="view-field"><strong>Referred By:</strong> ${r.referredBy}</div>`:''}
+      ${r.physioName?`<div class="view-field"><strong>Physiotherapist:</strong> ${r.physioName}</div>`:''}
+    </div></div>`;
+  if (r.diagnosis||r.complaint||r.duration||r.aggravating||r.relieving) {
+    html += `<div class="view-section"><div class="view-sec-head">🩺 CHIEF COMPLAINTS & DIAGNOSIS</div>
+    <div class="view-sec-body">
+      ${r.diagnosis?`<div class="view-field"><strong>Diagnosis:</strong> ${r.diagnosis}</div>`:''}
+      ${r.complaint?`<div class="view-field"><strong>Chief Complaint:</strong> ${r.complaint}</div>`:''}
+      ${r.duration?`<div class="view-field"><strong>Duration:</strong> ${r.duration}</div>`:''}
+      ${r.aggravating?`<div class="view-field"><strong>Aggravating:</strong> ${r.aggravating}</div>`:''}
+      ${r.relieving?`<div class="view-field"><strong>Relieving:</strong> ${r.relieving}</div>`:''}
+    </div></div>`;
+  }
+  if (r.hopi) {
+    html += `<div class="view-section"><div class="view-sec-head">📋 HISTORY</div>
+    <div class="view-sec-body">${r.hopi}</div></div>`;
+  }
+  if (r.nprs && r.nprs.some(n=>parseInt(n.value)>0)) {
+    html += `<div class="view-section"><div class="view-sec-head">📊 PAIN PROFILE (NPRS)</div>
+    <div class="view-sec-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${r.nprs.filter(n=>parseInt(n.value)>0).map(n=>`<div style="background:var(--surface);border-radius:7px;padding:8px 10px;border:1px solid var(--border)"><div style="font-size:10px;color:var(--muted);font-weight:700">${n.label}</div><div style="font-size:18px;font-weight:900;color:${parseInt(n.value)>=7?'var(--red)':parseInt(n.value)>=4?'var(--amber)':'var(--green)'}">${n.value}/10</div></div>`).join('')}
+    </div></div>`;
+  }
+  if (r.positiveTests && r.positiveTests.length) {
+    html += `<div class="view-section"><div class="view-sec-head">✅ POSITIVE SPECIAL TESTS (${r.positiveTests.length})</div>
+    <div class="view-sec-body">${r.positiveTests.map(t=>`<span style="display:inline-block;background:var(--red-light);color:var(--red);border:1px solid rgba(192,57,43,0.2);border-radius:5px;padding:3px 9px;font-size:12px;font-weight:700;margin:2px 3px 2px 0">${t}</span>`).join('')}</div></div>`;
+  }
+  if (r.selectedOptions && r.selectedOptions.length) {
+    html += `<div class="view-section"><div class="view-sec-head">📌 SELECTED FINDINGS</div>
+    <div class="view-sec-body">${r.selectedOptions.map(o=>`<span style="display:inline-block;background:var(--green-light);color:var(--green2);border:1px solid var(--green-mid);border-radius:5px;padding:2px 8px;font-size:12px;font-weight:700;margin:2px 3px 2px 0">${o}</span>`).join('')}</div></div>`;
+  }
+  if (r.neuroImpression) {
+    html += `<div class="view-section"><div class="view-sec-head">🧠 NEUROLOGICAL IMPRESSION</div>
+    <div class="view-sec-body">${r.neuroImpression}</div></div>`;
+  }
+  if (r.images && r.images.length) {
+    html += `<div class="view-section"><div class="view-sec-head">📷 IMAGES (${r.images.length})</div>
+    <div class="view-sec-body" style="display:flex;flex-wrap:wrap;gap:8px">
+      ${r.images.map(src=>`<img src="${src}" style="height:130px;width:auto;border-radius:8px;border:1px solid var(--border);object-fit:cover">`).join('')}
+    </div></div>`;
+  }
+  html += `<div style="text-align:center;padding:14px 0 4px;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.07em">Joint Space Physiotherapy · Confidential Patient Record · Where Science Meets Movement</div>`;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('view-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('view-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// EXPORT / IMPORT
+// ─────────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!DB_STORE.length) { showToast('No records to export'); return; }
+  const hdrs = ['Patient Name','Case No','Age','Sex','Occupation','Joint','Diagnosis','Date','Physiotherapist','Chief Complaint','Duration','Positive Tests','Pain (Movement)','Saved At'];
+  const rows = DB_STORE.map(r => [
+    r.patientName||'', r.caseNo||'', r.age||'', r.sex||'', r.occupation||'',
+    r.jointLabel||'', r.diagnosis||'', r.assessDate||'', r.physioName||'',
+    (r.complaint||'').replace(/\n/g,' ').replace(/,/g,';'),
+    r.duration||'', (r.positiveTests||[]).join(' | '),
+    r.nprs?.[1]?.value||'', r.savedAt||''
+  ]);
+  const csv = [hdrs,...rows].map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'JointSpace_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); showToast('📥 CSV exported!');
+}
+
+function exportJSON() {
+  if (!DB_STORE.length) { showToast('No records to backup'); return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(DB_STORE,null,2)],{type:'application/json'}));
+  a.download = 'JointSpace_Backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); showToast('💾 Backup downloaded!');
+}
+
+function importJSON() { document.getElementById('import-file').click(); }
+async function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  try {
+    const records = JSON.parse(text);
+    if (!Array.isArray(records)) throw new Error('Invalid format');
+    let count = 0;
+    for (const r of records) {
+      if (r.id && r.patientName) { await saveRecordToDB(r); count++; }
+    }
+    updateBadge(); renderRecords();
+    showToast(`✅ Imported ${count} records`);
+  } catch(err) { showToast('⚠️ Invalid backup file'); }
+  e.target.value = '';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────
+initDB().then(() => {
+  buildForm('shoulder');
+  updateBadge();
+});
+</script>
+</body>
+</html>
