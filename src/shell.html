@@ -1,0 +1,71 @@
+<body>
+<div class="nav-bar">
+  <div class="wrap">
+    <div class="nav-top">
+      <div style="width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🦴</div>
+      <div><div class="brand-name">Joint Space</div><div class="brand-sub">Physiotherapy Assessment Proforma</div></div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-page="form">📋 Assessment</button>
+      <button class="nav-tab" data-page="records">📂 Saved Records <span class="tab-badge" id="rec-badge">0</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="page active" id="page-form">
+  <div class="wrap">
+    <div class="form-wrap">
+      <div class="field-label" style="margin-bottom:7px">Select joint / region</div>
+      <div class="region-grid" id="region-grid"></div>
+      <div class="form-head">
+        <div class="form-head-title" id="region-title">Assessment</div>
+        <div class="form-head-sub">Subjective · flags · outcome measures · ROM · MMT · neuro · special tests · palpation · MRI &amp; imaging · diagnosis · plan</div>
+        <span class="edit-flag" id="edit-flag"></span>
+      </div>
+      <div class="sec-nav" id="sec-nav"></div>
+      <div class="tools-row">
+        <button id="btn-expand">⤢ Expand all</button>
+        <button id="btn-collapse">⤡ Collapse all</button>
+        <button id="btn-new">＋ New patient</button>
+      </div>
+      <div id="assessment-form"></div>
+    </div>
+    <div class="action-row">
+      <button class="btn-main btn-save" id="btn-save">💾 Save</button>
+      <button class="btn-main btn-print" id="btn-report">📄 Report / Print</button>
+      <button class="btn-main btn-clear" id="btn-clear">↺ Clear</button>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-records">
+  <div class="wrap">
+    <div class="rec-page-header">
+      <div class="rec-search-row">
+        <input class="rec-search" type="text" id="rec-search" placeholder="🔍 Search name, case no, diagnosis…">
+        <select class="rec-filter" id="rec-region"></select>
+      </div>
+      <div class="stats-row" id="rec-stats"></div>
+    </div>
+    <div class="rec-export-row">
+      <button class="rec-export-btn" id="btn-csv">📥 Export CSV</button>
+      <button class="rec-export-btn" id="btn-json" style="color:var(--blue)">💾 Backup (JSON)</button>
+      <button class="rec-export-btn" id="btn-import" style="color:var(--amber)">📤 Restore</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none">
+    <div class="rec-list" id="records-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="view-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <button class="modal-btn" id="btn-close">✕ Close</button>
+      <div class="modal-head-title" id="modal-title">Report</div>
+      <button class="modal-btn" id="btn-print">🖨️ Print / PDF</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+<input type="file" id="img-input" accept="image/*" multiple style="display:none">
+<div class="toast" id="toast"></div>
