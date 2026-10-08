@@ -400,10 +400,18 @@ function newForm(rid, carry) {
 }
 function hasClinicalData(v) { return Object.keys(v).some(k => !k.startsWith('pt.') && !k.startsWith('pmh.') && k!=='sign.date'); }
 function carryOver(v) { const c = {}; Object.keys(v).filter(k=>k.startsWith('pt.')||k.startsWith('pmh.')).forEach(k=>c[k]=v[k]); return c; }
-function switchRegion(rid) {
+// In-app confirm dialog (window.confirm is blocked in many app wrappers / WebViews)
+function askConfirm(msg, okLabel='OK') {
+  return new Promise(res => {
+    const d = $('#confirm-dlg'); $('#confirm-msg').textContent = msg; $('#confirm-ok').textContent = okLabel; d.classList.add('open');
+    const done = val => { d.classList.remove('open'); $('#confirm-ok').onclick = $('#confirm-cancel').onclick = null; res(val); };
+    $('#confirm-ok').onclick = () => done(true); $('#confirm-cancel').onclick = () => done(false);
+  });
+}
+async function switchRegion(rid) {
   if (rid === REGION) return;
   const v = getVals();
-  if (hasClinicalData(v) && !confirm(`Switch to ${REGIONS[rid].label}? Patient details are kept; findings entered for ${REGIONS[REGION].label} will be cleared (save first if needed).`)) return;
+  if (hasClinicalData(v) && !await askConfirm(`Switch to ${REGIONS[rid].label}? Patient details are kept; findings entered for ${REGIONS[REGION].label} will be cleared (save first if needed).`, 'Switch')) return;
   newForm(rid, carryOver(v)); showToast(`${REGIONS[rid].icon} ${REGIONS[rid].label}`);
 }
 async function saveAssessment() {
@@ -599,8 +607,8 @@ function bind() {
   $('#sec-nav').addEventListener('click', e => { const b = e.target.closest('[data-jump]'); if (b) openSection(b.dataset.jump); });
   $('#btn-expand').onclick = () => $$('.section-card').forEach(c=>c.classList.add('open'));
   $('#btn-collapse').onclick = () => $$('.section-card').forEach(c=>c.classList.remove('open'));
-  $('#btn-new').onclick = () => { if (confirm('Start a new blank assessment? Unsaved changes will be lost.')) { newForm(REGION); showToast('New assessment'); } };
-  $('#btn-clear').onclick = () => { if (confirm('Clear all form data?')) { newForm(REGION); showToast('↺ Form cleared'); } };
+  $('#btn-new').onclick = async () => { if (await askConfirm('Start a new blank assessment? Unsaved changes will be lost.', 'Start new')) { newForm(REGION); showToast('New assessment'); } };
+  $('#btn-clear').onclick = async () => { if (await askConfirm('Clear all form data?', 'Clear')) { newForm(REGION); showToast('↺ Form cleared'); } };
   $('#btn-save').onclick = saveAssessment;
   $('#btn-report').onclick = () => openReport({ region:REGION, v: recompute(), images: IMAGES });
   $('#btn-close').onclick = closeReport;
@@ -617,7 +625,7 @@ function bind() {
     if (b.dataset.act === 'reassess') { const keep = carryOver(r.v); keep['pt.date'] = today(); keep['sign.date'] = today(); const ps = primaryScore(r);
       keep['hx.hopi'] = `Re-assessment. Previous assessment ${r.v['pt.date']||''}${r.v['dx.primary']?' — '+r.v['dx.primary']:''}${ps?' — '+ps:''}.`;
       loadInto(r.region||'lumbar', keep, null, null); switchPage('form'); $('#sec-pt').classList.add('open'); showToast('↻ Re-assessment started'); }
-    if (b.dataset.act === 'del' && confirm('Delete this assessment permanently?')) { await dbDel(r.id); if (currentId === r.id) setEditing(null); updateBadge(); renderRecords(); showToast('🗑️ Deleted'); }
+    if (b.dataset.act === 'del' && await askConfirm('Delete this assessment permanently?', 'Delete')) { await dbDel(r.id); if (currentId === r.id) setEditing(null); updateBadge(); renderRecords(); showToast('🗑️ Deleted'); }
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeReport(); });
 }

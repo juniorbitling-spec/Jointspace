@@ -25,4 +25,5 @@ html = f"""<!DOCTYPE html>
 """
 out = root.parent / 'JointSpace-Proforma.html'
 out.write_text(html)
-print('wrote', out, len(html), 'bytes')
+(root.parent / 'index.html').write_text(html)  # entry point for app builders / GitHub Pages
+print('wrote', out, 'and index.html,', len(html), 'bytes')
