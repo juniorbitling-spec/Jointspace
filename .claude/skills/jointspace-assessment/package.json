@@ -1,0 +1,8 @@
+{
+  "name": "jointspace-assessment",
+  "private": true,
+  "description": "Helpers for building JointSpace physiotherapy assessment .docx files",
+  "dependencies": {
+    "docx": "^9.0.0"
+  }
+}
