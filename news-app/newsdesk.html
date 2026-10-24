@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NewsDesk</title>
+<style>
+:root {
+  --bg: #f6f4ef; --card: #ffffff; --ink: #1d1d1f; --muted: #66645e; --line: #e2ded5;
+  --accent: #b3261e; --politics: #1f5fbf; --war: #b3261e;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141416; --card: #1e1e21; --ink: #ecebe8; --muted: #a3a19b; --line: #34343a;
+    --accent: #ff6b5e; --politics: #7aa7ff; --war: #ff6b5e;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.masthead { border-bottom: 3px double var(--line); padding: 20px 16px 14px; max-width: 1200px; margin: 0 auto; }
+.brand h1 { font-family: Georgia, "Times New Roman", serif; font-size: 2.4rem; margin: 0; letter-spacing: -0.5px; }
+.brand p { margin: 2px 0 14px; color: var(--muted); }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.group { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+button { font: inherit; border: 0; background: transparent; color: var(--ink); padding: 6px 14px; cursor: pointer; }
+.group button.active { background: var(--ink); color: var(--bg); }
+.ghost { border: 1px solid var(--line); border-radius: 999px; }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.status { color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+.card h2 { font-family: Georgia, serif; font-size: 1.2rem; line-height: 1.3; margin: 0; }
+.card p { margin: 0; color: var(--muted); font-size: .94rem; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .8rem; color: var(--muted); }
+.tag { font-weight: 600; text-transform: uppercase; letter-spacing: .5px; font-size: .72rem; }
+.tag.politics { color: var(--politics); }
+.tag.war { color: var(--war); }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+.multi { color: var(--accent); font-weight: 600; }
+.read { margin-top: auto; font-weight: 600; color: var(--accent); font-size: .9rem; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); overflow-y: auto; padding: 24px 16px; }
+.sheet { position: relative; max-width: 760px; margin: 0 auto; background: var(--card); border-radius: 12px; padding: 28px 28px 20px; }
+.close { position: absolute; top: 8px; right: 10px; font-size: 1.8rem; line-height: 1; }
+#article h1 { font-family: Georgia, serif; font-size: 1.9rem; line-height: 1.2; margin-top: 0; }
+#article h2 { font-family: Georgia, serif; font-size: 1.3rem; margin-top: 1.6em; }
+#article p, #article li { font-size: 1.05rem; }
+#article a, .coverage a { color: var(--accent); }
+.coverage { border-top: 1px solid var(--line); margin-top: 24px; }
+.coverage ul { padding-left: 18px; }
+.coverage li { margin: 6px 0; }
+.loading { color: var(--muted); font-style: italic; }
+.error { color: var(--accent); }
+.settings label { display: block; font-weight: 600; margin: 12px 0 6px; }
+.settings input { width: 100%; font: inherit; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.settings .row { display: flex; gap: 10px; margin-top: 14px; }
+.primary { background: var(--ink); color: var(--bg); border-radius: 999px; }
+.hint { color: var(--muted); font-size: .9rem; }
+@media (max-width: 600px) { .sheet { padding: 22px 16px; } .brand h1 { font-size: 1.9rem; } }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="brand">
+    <h1>NewsDesk</h1>
+    <p>India &amp; world politics and conflict, from many outlets, in one detailed story</p>
+  </div>
+  <nav class="filters">
+    <div class="group" aria-label="Region">
+      <button data-region="india" class="active">India</button>
+      <button data-region="world">Global</button>
+    </div>
+    <div class="group" aria-label="Topic">
+      <button data-topic="" class="active">All</button>
+      <button data-topic="politics">Politics</button>
+      <button data-topic="war">War &amp; Conflict</button>
+    </div>
+    <button id="refresh" class="ghost">Refresh</button>
+    <button id="openSettings" class="ghost">AI settings</button>
+  </nav>
+</header>
+
+<main>
+  <p id="status" class="status">Loading stories…</p>
+  <section id="stories" class="grid"></section>
+</main>
+
+<div id="reader" class="overlay" hidden>
+  <article class="sheet">
+    <button class="close" data-close aria-label="Close">×</button>
+    <div id="article"></div>
+    <section class="coverage">
+      <h3>Original coverage</h3>
+      <ul id="coverage"></ul>
+    </section>
+  </article>
+</div>
+
+<div id="settings" class="overlay" hidden>
+  <div class="sheet settings">
+    <button class="close" data-close aria-label="Close">×</button>
+    <h2>AI-written articles</h2>
+    <p class="hint">Add an Anthropic API key to have Claude read every source and write a detailed article for each story.
+      Without a key you still get the news, with each outlet's summary. Get a key at console.anthropic.com.
+      Each article you open is a paid request.</p>
+    <label for="apiKey">Anthropic API key</label>
+    <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off" />
+    <p class="hint">The key is saved only in this browser on this device and sent only to Anthropic.</p>
+    <div class="row">
+      <button id="saveKey" class="primary">Save</button>
+      <button id="clearKey" class="ghost">Remove key</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import Anthropic from "https://esm.sh/@anthropic-ai/sdk@1.3.0";
+
+const MODEL = "claude-opus-5-5";
+const FEED_TTL_MS = 10 * 60 * 1000;
+
+const FEEDS = {
+  india: [
+    { source: "The Hindu", url: "https://www.thehindu.com/news/national/feeder/default.rss" },
+    { source: "Indian Express", url: "https://indianexpress.com/section/india/feed/" },
+    { source: "NDTV", url: "https://feeds.feedburner.com/ndtvnews-india-news" },
+    { source: "Hindustan Times", url: "https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml" },
+    { source: "Times of India", url: "https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms" },
+    { source: "BBC India", url: "https://feeds.bbci.co.uk/news/world/asia/india/rss.xml" },
+  ],
+  world: [
+    { source: "BBC", url: "https://feeds.bbci.co.uk/news/world/rss.xml" },
+    { source: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml" },
+    { source: "The Guardian", url: "https://www.theguardian.com/world/rss" },
+    { source: "DW", url: "https://rss.dw.com/rdf/rss-en-world" },
+    { source: "The Hindu (World)", url: "https://www.thehindu.com/news/international/feeder/default.rss" },
+    { source: "Indian Express (World)", url: "https://indianexpress.com/section/world/feed/" },
+  ],
+};
+
+// A web page can't read other sites directly, so feeds go through a public relay.
+// Each relay is tried in turn until one answers.
+const RELAYS = [
+  (url) => [`https://r.jina.ai/${url}`, { headers: { "X-Return-Format": "html" } }],
+  (url) => [`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {}],
+  (url) => [`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, {}],
+  (url) => [`https://corsproxy.io/?url=${encodeURIComponent(url)}`, {}],
+];
+
+// Strong words count double; weak words alone are not enough, so crime and accidents stay out.
+const TOPICS = {
+  war: {
+    strong: [
+      "war", "wars", "military", "army", "troops", "missile", "missiles", "drone strike", "airstrike",
+      "airstrikes", "ceasefire", "truce", "invasion", "shelling", "hostage", "hostages", "insurgent",
+      "militant", "militants", "terrorist", "terror attack", "nato", "gaza", "ukraine", "kyiv",
+      "hamas", "hezbollah", "houthi", "houthis", "idf", "pentagon", "warship", "soldiers", "rebels",
+      "offensive", "line of control", "loc", "infiltration", "air force", "navy", "nuclear",
+      "artillery", "west bank", "occupied", "frontline", "armed forces", "defence minister",
+    ],
+    weak: ["attack", "killed", "strike", "bomb", "blast", "border", "conflict", "weapons", "drone", "russia", "israel", "iran", "sudan", "gunmen"],
+  },
+  politics: {
+    strong: [
+      "election", "elections", "minister", "government", "parliament", "lok sabha", "rajya sabha",
+      "assembly", "bjp", "congress", "aap", "tmc", "dmk", "samajwadi", "prime minister", "modi",
+      "rahul gandhi", "chief minister", "opposition", "senate", "cabinet", "president", "polls",
+      "white house", "kremlin", "coalition", "governor", "election commission", "midterms",
+      "diplomat", "diplomatic", "summit", "sanctions", "tariff", "tariffs", "trump", "mla", "mp",
+    ],
+    weak: ["vote", "poll", "policy", "bill", "law", "court", "supreme court", "talks", "protest", "party", "centre"],
+  },
+};
+for (const t of Object.values(TOPICS)) {
+  for (const k of ["strong", "weak"]) {
+    t[k] = t[k].map((w) => new RegExp(`\\b${w.replace(/ /g, "\\s+")}\\b`));
+  }
+}
+
+const STOPWORDS = new Set(
+  "a an the of to in on for and or but with at by from as is are was were be been has have had it its this that these those after over into about amid says said say new up out not no will can could would should more than his her their they them he she we you who what why how when where which india indian world news live updates".split(" "),
+);
+
+const SYSTEM_PROMPT = `You are the senior editor of an independent news desk that covers Indian and global politics and conflict.
+You receive several reports of the same event from different outlets, with links. Use web_fetch on the links to read the full reports when you can.
+Then write one original, detailed news article in your own words that:
+- Opens with a clear headline line ("# ...") and a 2-3 sentence lede stating what happened, where and when.
+- Explains the background and why the event matters, then covers the key players and their stated positions.
+- Notes where the outlets agree, and explicitly flags where they differ in facts, numbers or framing.
+- Stays neutral: attribute claims to their source ("according to Al Jazeera ..."), never present a disputed claim as fact, and do not invent quotes, figures or details that are not in the reports.
+- Ends with a "## What to watch" section and a "## Sources" list naming each outlet used.
+Use Markdown with short sections and subheadings. Aim for 500-900 words, less if the reports are thin.
+Reply with the article only, with no preamble or notes about your process.`;
+
+const state = { region: "india", topic: "" };
+const feedCache = {};
+const storyIndex = new Map();
+const articleCache = new Map();
+const $ = (sel) => document.querySelector(sel);
+
+// Browser storage can be unavailable (private mode, blocked site data).
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  remove(k) { try { localStorage.removeItem(k); } catch {} },
+};
+let apiKey = store.get("newsdesk.apiKey") || "";
+
+function escapeHtml(s = "") {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+function stripHtml(s = "") {
+  const doc = new DOMParser().parseFromString(s, "text/html");
+  return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function safeUrl(u = "") {
+  return /^https?:\/\//i.test(u) ? u : "#";
+}
+
+function timeAgo(iso) {
+  if (!iso) return "";
+  const mins = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (Number.isNaN(mins)) return "";
+  if (mins < 60) return `${Math.max(mins, 1)}m ago`;
+  if (mins < 1440) return `${Math.round(mins / 60)}h ago`;
+  return `${Math.round(mins / 1440)}d ago`;
+}
+
+function tokens(text) {
+  return new Set(
+    text.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
+      .filter((w) => w.length > 2 && !STOPWORDS.has(w)),
+  );
+}
+
+function similarity(a, b) {
+  let shared = 0;
+  for (const w of a) if (b.has(w)) shared++;
+  return shared / Math.min(a.size || 1, b.size || 1);
+}
+
+function classify(text) {
+  const t = text.toLowerCase();
+  // A topic needs at least one strong word; weak words only add weight on top.
+  const score = ({ strong, weak }) => {
+    const hits = strong.filter((re) => re.test(t)).length;
+    return hits ? hits * 2 + weak.filter((re) => re.test(t)).length : 0;
+  };
+  const war = score(TOPICS.war);
+  const politics = score(TOPICS.politics);
+  if (!war && !politics) return null;
+  return war >= politics ? "war" : "politics";
+}
+
+async function fetchText(url) {
+  for (const relay of RELAYS) {
+    try {
+      const [relayUrl, opts] = relay(url);
+      const res = await fetch(relayUrl, { ...opts, signal: AbortSignal.timeout(15000) });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text.includes("<item") || text.includes("<entry")) return text;
+    } catch {}
+  }
+  throw new Error("all relays failed");
+}
+
+async function fetchFeed({ source, url }) {
+  try {
+    const xml = new DOMParser().parseFromString(await fetchText(url), "text/xml");
+    const pick = (el, ...names) => {
+      for (const n of names) {
+        const v = el.getElementsByTagName(n)[0];
+        if (v) return v.getAttribute("href") || v.textContent || "";
+      }
+      return "";
+    };
+    return [...xml.querySelectorAll("item, entry")].slice(0, 40).map((el) => ({
+      source,
+      title: stripHtml(pick(el, "title")),
+      link: pick(el, "link").trim(),
+      summary: stripHtml(pick(el, "description", "summary", "content")).slice(0, 600),
+      published: pick(el, "pubDate", "published", "updated", "dc:date") || null,
+    }));
+  } catch (err) {
+    console.warn(`Feed failed: ${source} (${err.message})`);
+    return [];
+  }
+}
+
+function hashId(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
+// Group headlines about the same event, across outlets, into one story.
+function cluster(items) {
+  const stories = [];
+  for (const item of items) {
+    const words = tokens(`${item.title} ${item.summary.slice(0, 160)}`);
+    const titleWords = tokens(item.title);
+    const match = stories.find((s) => s.topic === item.topic &&
+      (similarity(words, s.words) >= 0.45 || similarity(titleWords, s.titleWords) >= 0.5));
+    if (match) {
+      if (!match.reports.some((r) => r.link === item.link)) match.reports.push(item);
+      for (const w of words) match.words.add(w);
+    } else {
+      stories.push({ topic: item.topic, words, titleWords, reports: [item] });
+    }
+  }
+  return stories.map(({ topic, reports }) => {
+    reports.sort((a, b) => new Date(b.published || 0) - new Date(a.published || 0));
+    const lead = reports[0];
+    return {
+      id: hashId(lead.link || lead.title),
+      topic,
+      headline: lead.title,
+      summary: lead.summary,
+      published: lead.published,
+      sources: [...new Set(reports.map((r) => r.source))],
+      reports,
+    };
+  });
+}
+
+async function getStories(region, force) {
+  const cached = feedCache[region];
+  if (!force && cached && Date.now() - cached.at < FEED_TTL_MS) return cached.stories;
+
+  const results = await Promise.all(FEEDS[region].map(fetchFeed));
+  const items = results.flat()
+    .map((it) => ({ ...it, topic: classify(`${it.title} ${it.summary}`) }))
+    .filter((it) => it.topic && it.title);
+
+  const stories = cluster(items).sort((a, b) =>
+    b.sources.length - a.sources.length || new Date(b.published || 0) - new Date(a.published || 0),
+  );
+  for (const s of stories) storyIndex.set(s.id, { ...s, region });
+  feedCache[region] = { at: Date.now(), stories };
+  return stories;
+}
+
+async function writeArticle(story) {
+  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+  const material = story.reports.slice(0, 6).map((r, i) =>
+    `<report index="${i + 1}" source="${r.source}" published="${r.published || "unknown"}">\nHeadline: ${r.title}\nLink: ${r.link}\nSummary: ${r.summary}\n</report>`,
+  ).join("\n\n");
+
+  const messages = [{
+    role: "user",
+    content: `Topic: ${story.topic}. Region: ${story.region}.\n\n${material}\n\nWrite the article now.`,
+  }];
+
+  // Server-side web_fetch can pause a long turn; resume it until the article is finished.
+  for (let turn = 0; turn < 5; turn++) {
+    const stream = client.beta.messages.stream({
+      model: MODEL,
+      max_tokens: 64000,
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      output_config: { effort: "medium" },
+      system: SYSTEM_PROMPT,
+      tools: [{ type: "web_fetch_20260209", name: "web_fetch", max_uses: 6 }],
+      messages,
+    });
+    const message = await stream.finalMessage();
+    if (message.stop_reason === "refusal") throw new Error("The model declined to write this story.");
+    if (message.stop_reason === "pause_turn") {
+      messages.push({ role: "assistant", content: message.content });
+      continue;
+    }
+    // Keep only the text written after the last fetch, which is the article itself.
+    const lastTool = message.content.findLastIndex((b) => b.type.endsWith("tool_result"));
+    return message.content.slice(lastTool + 1)
+      .filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+  }
+  throw new Error("The article took too long to write. Try again.");
+}
+
+// Without an API key, stitch the outlets' own summaries into a simple combined brief.
+function fallbackArticle(story) {
+  const parts = [`# ${story.headline}`, ""];
+  parts.push(`*Combined brief from ${story.sources.join(", ")}. Add an API key in AI settings for a fully written article.*`, "");
+  for (const r of story.reports) {
+    parts.push(`## ${r.source}: ${r.title}`, "", r.summary || "_No summary provided._", "", `[Read at ${r.source}](${r.link})`, "");
+  }
+  return parts.join("\n");
+}
+
+// Small Markdown renderer: escapes HTML first, so feed or model text can't inject markup.
+function renderMarkdown(md) {
+  const inline = (s) => escapeHtml(s)
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
+    .replace(/(^|\W)_([^_]+)_(?=\W|$)/g, "$1<em>$2</em>");
+  const out = [];
+  let list = null;
+  const closeList = () => { if (list) { out.push(`</${list}>`); list = null; } };
+  for (const raw of md.split("\n")) {
+    const line = raw.trimEnd();
+    let m;
+    if ((m = line.match(/^(#{1,4})\s+(.*)/))) {
+      closeList();
+      out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`);
+    } else if ((m = line.match(/^\s*[-*]\s+(.*)/))) {
+      if (list !== "ul") { closeList(); out.push("<ul>"); list = "ul"; }
+      out.push(`<li>${inline(m[1])}</li>`);
+    } else if ((m = line.match(/^\s*\d+\.\s+(.*)/))) {
+      if (list !== "ol") { closeList(); out.push("<ol>"); list = "ol"; }
+      out.push(`<li>${inline(m[1])}</li>`);
+    } else if (/^\s*(---|\*\*\*)\s*$/.test(line)) {
+      closeList();
+      out.push("<hr>");
+    } else if (line.trim()) {
+      closeList();
+      out.push(`<p>${inline(line)}</p>`);
+    } else {
+      closeList();
+    }
+  }
+  closeList();
+  return out.join("\n");
+}
+
+function cardHtml(s) {
+  return `
+    <article class="card" data-id="${s.id}">
+      <div class="meta">
+        <span class="tag ${s.topic}">${s.topic === "war" ? "War & Conflict" : "Politics"}</span>
+        <span>· ${timeAgo(s.published)}</span>
+        ${s.sources.length > 1 ? `<span class="multi">· ${s.sources.length} sources</span>` : ""}
+      </div>
+      <h2>${escapeHtml(s.headline)}</h2>
+      <p>${escapeHtml(s.summary.slice(0, 220))}${s.summary.length > 220 ? "…" : ""}</p>
+      <div class="meta">${s.sources.map((src) => `<span class="chip">${escapeHtml(src)}</span>`).join("")}</div>
+      <span class="read">Read detailed story →</span>
+    </article>`;
+}
+
+async function loadStories(force = false) {
+  $("#status").textContent = "Gathering stories from news sources…";
+  $("#stories").innerHTML = "";
+  try {
+    let stories = await getStories(state.region, force);
+    if (state.topic) stories = stories.filter((s) => s.topic === state.topic);
+    stories = stories.slice(0, 60);
+    const label = state.region === "india" ? "India" : "Global";
+    $("#status").textContent = stories.length
+      ? `${stories.length} ${label} stories${apiKey ? "" : " · AI writer off (add a key in AI settings)"}`
+      : "No stories could be loaded. Check your internet connection and tap Refresh.";
+    $("#stories").innerHTML = stories.map(cardHtml).join("");
+  } catch (err) {
+    $("#status").innerHTML = `<span class="error">Could not load news: ${escapeHtml(err.message)}</span>`;
+  }
+}
+
+async function openStory(id) {
+  const story = storyIndex.get(id);
+  if (!story) return;
+  show("#reader");
+  $("#coverage").innerHTML = story.reports.map((r) =>
+    `<li><strong>${escapeHtml(r.source)}</strong>: <a href="${escapeHtml(safeUrl(r.link))}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a></li>`,
+  ).join("");
+
+  if (!apiKey) {
+    $("#article").innerHTML = renderMarkdown(fallbackArticle(story));
+    return;
+  }
+  const cached = articleCache.get(id);
+  if (cached) {
+    $("#article").innerHTML = renderMarkdown(cached);
+    return;
+  }
+  $("#article").innerHTML = '<p class="loading">Reading every source and writing the detailed story… this can take a minute or two.</p>';
+  try {
+    const article = await writeArticle(story);
+    articleCache.set(id, article);
+    if (!$("#reader").hidden) $("#article").innerHTML = renderMarkdown(article);
+  } catch (err) {
+    let reason = err.message;
+    if (err instanceof Anthropic.AuthenticationError) reason = "the API key was rejected. Check it in AI settings";
+    else if (err instanceof Anthropic.RateLimitError) reason = "too many requests. Wait a moment and try again";
+    $("#article").innerHTML = `<p class="error">AI writer failed: ${escapeHtml(reason)}. Showing the combined source brief.</p>` +
+      renderMarkdown(fallbackArticle(story));
+  }
+}
+
+function show(sel) {
+  $(sel).hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function hideAll() {
+  document.querySelectorAll(".overlay").forEach((o) => { o.hidden = true; });
+  document.body.style.overflow = "";
+}
+
+document.querySelectorAll("[data-region]").forEach((btn) => btn.addEventListener("click", () => {
+  document.querySelectorAll("[data-region]").forEach((b) => b.classList.toggle("active", b === btn));
+  state.region = btn.dataset.region;
+  loadStories();
+}));
+document.querySelectorAll("[data-topic]").forEach((btn) => btn.addEventListener("click", () => {
+  document.querySelectorAll("[data-topic]").forEach((b) => b.classList.toggle("active", b === btn));
+  state.topic = btn.dataset.topic;
+  loadStories();
+}));
+$("#refresh").addEventListener("click", () => loadStories(true));
+$("#stories").addEventListener("click", (e) => {
+  const card = e.target.closest(".card");
+  if (card) openStory(card.dataset.id);
+});
+document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", hideAll));
+document.querySelectorAll(".overlay").forEach((o) => o.addEventListener("click", (e) => { if (e.target === o) hideAll(); }));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideAll(); });
+
+$("#openSettings").addEventListener("click", () => { $("#apiKey").value = apiKey; show("#settings"); });
+$("#saveKey").addEventListener("click", () => {
+  apiKey = $("#apiKey").value.trim();
+  if (apiKey) store.set("newsdesk.apiKey", apiKey); else store.remove("newsdesk.apiKey");
+  articleCache.clear();
+  hideAll();
+  loadStories();
+});
+$("#clearKey").addEventListener("click", () => {
+  apiKey = "";
+  store.remove("newsdesk.apiKey");
+  $("#apiKey").value = "";
+  hideAll();
+  loadStories();
+});
+
+loadStories();
+</script>
+</body>
+</html>
