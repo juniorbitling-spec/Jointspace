@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NewsDesk</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand">
+      <h1>NewsDesk</h1>
+      <p>India &amp; world politics and conflict, from many outlets, in one detailed story</p>
+    </div>
+    <nav class="filters">
+      <div class="group" role="tablist" aria-label="Region">
+        <button data-region="india" class="active">India</button>
+        <button data-region="world">Global</button>
+      </div>
+      <div class="group" role="tablist" aria-label="Topic">
+        <button data-topic="" class="active">All</button>
+        <button data-topic="politics">Politics</button>
+        <button data-topic="war">War &amp; Conflict</button>
+      </div>
+      <button id="refresh" class="ghost" title="Reload feeds">Refresh</button>
+    </nav>
+  </header>
+
+  <main>
+    <p id="status" class="status">Loading stories…</p>
+    <section id="stories" class="grid"></section>
+  </main>
+
+  <div id="reader" class="reader" hidden>
+    <article class="sheet">
+      <button id="close" class="close" aria-label="Close">×</button>
+      <div id="article"></div>
+      <section class="coverage">
+        <h3>Original coverage</h3>
+        <ul id="coverage"></ul>
+      </section>
+    </article>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
