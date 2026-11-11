@@ -1,7 +1,10 @@
 # Study Highlighter
 
 A single-file reading app for studying Claude docs, artifacts, and other documents.
-Open `index.html` in any browser. Nothing to install.
+`index.html` here is the source. **`../Study-Highlighter.html` is the offline build**: every library and font is inside the file, so it works with no internet at all. Rebuild it after editing with `python3 tools/build_offline.py`.
+
+## Linux Mint app
+Put `Study-Highlighter.html` in the same folder as `linux-mint/install.sh` (or keep the repo layout) and run `bash install.sh`. Study Highlighter then appears in the Menu under Education and opens in its own window. Remove it with `bash install.sh --uninstall`.
 
 ## Getting content in
 - **Paste**: select all in a Claude Doc or artifact page, copy, and paste. Headings, lists, tables and code keep their formatting. Markdown copied from a Claude chat reply also works.

@@ -1,4 +1,4 @@
 # Jointspace
 
 - [`JointSpace-Assessment-v2.html`](JointSpace-Assessment-v2.html)
-- [`study-highlighter/`](study-highlighter/): highlight and review Claude docs and artifacts for study
+- [`Study-Highlighter.html`](Study-Highlighter.html): offline study app for highlighting Claude docs and artifacts ([details](study-highlighter/README.md), [Linux Mint installer](linux-mint/install.sh))
