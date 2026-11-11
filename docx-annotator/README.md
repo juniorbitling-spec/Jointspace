@@ -45,3 +45,9 @@ After the first visit, a service worker caches the app. From then on it launches
 - Rendering uses [docx-preview](https://github.com/VolodymyrBaydalka/docxjs) (Apache-2.0) and [JSZip](https://stuk.github.io/jszip/) (MIT). Complex layouts may look slightly different from Word, but your original file is never changed. Exports are written to a new file.
 - Old `.doc` files are not supported. Save them as `.docx` in Word first.
 - When you change files in this folder, bump `VERSION` in `sw.js` so installed copies update.
+
+## Single-file version (for AppMint and other HTML-to-app builders)
+
+`dist/DOCX-Annotator.html` is the whole app in **one HTML file**: CSS, JavaScript, libraries and icon are all inlined, and it loads nothing from the internet. Upload this file to your app builder.
+
+To rebuild it after editing the source files, run: `python3 build-single.py`
