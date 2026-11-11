@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Study Highlighter</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+/* Layout: three-column reading desk (library | page | highlights); side columns become drawers on narrow screens. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #18202e;
+  --muted: #5d6779;
+  --line: #dce1ea;
+  --accent: #2f4bd8;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6eafb;
+  --danger: #b4232f;
+  --blank: #e4e8ef;
+  --scrim: rgba(16, 20, 28, .38);
+  --shadow: 0 10px 30px rgba(20, 30, 60, .14), 0 2px 6px rgba(20, 30, 60, .08);
+  /* highlighter inks */
+  --hl-y: rgba(255, 210, 0, .46);
+  --hl-g: rgba(52, 199, 105, .34);
+  --hl-b: rgba(60, 150, 255, .30);
+  --hl-p: rgba(255, 86, 156, .28);
+  --hl-o: rgba(255, 136, 30, .38);
+  --dot-y: #e5b800; --dot-g: #23a456; --dot-b: #2f84e6; --dot-p: #e2407f; --dot-o: #e9741a;
+  --font-read: "Literata", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-ui: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --head-h: 56px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --ink: #e5e8ee; --muted: #9aa3b3; --line: #2a303c;
+    --accent: #93a5ff; --accent-ink: #10142a; --accent-soft: #232a45; --danger: #ff7b85; --blank: #2a303c;
+    --scrim: rgba(0, 0, 0, .55); --shadow: 0 10px 30px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .4);
+    --hl-y: rgba(255, 210, 0, .30); --hl-g: rgba(52, 210, 110, .26); --hl-b: rgba(80, 160, 255, .30);
+    --hl-p: rgba(255, 90, 160, .28); --hl-o: rgba(255, 140, 40, .30);
+    --dot-y: #f5cf2e; --dot-g: #3fcf78; --dot-b: #5aa6ff; --dot-p: #ff6aa6; --dot-o: #ff9a45;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --ink: #e5e8ee; --muted: #9aa3b3; --line: #2a303c;
+  --accent: #93a5ff; --accent-ink: #10142a; --accent-soft: #232a45; --danger: #ff7b85; --blank: #2a303c;
+  --scrim: rgba(0, 0, 0, .55); --shadow: 0 10px 30px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .4);
+  --hl-y: rgba(255, 210, 0, .30); --hl-g: rgba(52, 210, 110, .26); --hl-b: rgba(80, 160, 255, .30);
+  --hl-p: rgba(255, 90, 160, .28); --hl-o: rgba(255, 140, 40, .30);
+  --dot-y: #f5cf2e; --dot-g: #3fcf78; --dot-b: #5aa6ff; --dot-p: #ff6aa6; --dot-o: #ff9a45;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--font-ui); font-size: 14px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- header ---------- */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  height: var(--head-h); display: flex; align-items: center; gap: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; white-space: nowrap; }
+.brand-mark { width: 22px; height: 22px; border-radius: 5px; background: linear-gradient(180deg, transparent 52%, var(--hl-y) 52%); border: 1.5px solid var(--ink); display: grid; place-items: center; font-family: var(--font-read); font-weight: 700; font-size: 13px; line-height: 1; }
+.doc-title { flex: 1; min-width: 0; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-actions { display: flex; gap: 8px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 500; white-space: nowrap; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:disabled { opacity: .45; cursor: not-allowed; }
+.btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.btn .count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.btn svg { width: 16px; height: 16px; flex: none; }
+.icon-btn { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); }
+.icon-btn:hover { border-color: var(--line); color: var(--ink); }
+.narrow-only { display: none; }
+
+/* ---------- layout ---------- */
+.desk { display: grid; grid-template-columns: 250px minmax(0, 1fr) 330px; align-items: start; }
+.pane {
+  position: sticky; top: calc(var(--head-h) + env(safe-area-inset-top, 0px));
+  height: calc(100dvh - var(--head-h) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto; background: var(--surface);
+  display: flex; flex-direction: column;
+}
+.lib { border-right: 1px solid var(--line); }
+.side { border-left: 1px solid var(--line); }
+.pane-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px 10px; }
+.eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.pane-foot { margin-top: auto; padding: 12px 16px 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.pane-foot .btn { justify-content: center; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+
+/* library list */
+.docs { list-style: none; margin: 0; padding: 0 8px; display: flex; flex-direction: column; gap: 2px; }
+.doc-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px; border-radius: 8px; }
+.doc-item.active { background: var(--accent-soft); }
+.doc-open { text-align: left; background: none; border: 0; padding: 9px 8px; border-radius: 8px; min-width: 0; }
+.doc-open strong { display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.doc-item.active .doc-open strong { color: var(--accent); }
+.doc-open span { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); margin-right: 2px; vertical-align: 1px; }
+.doc-del { font-size: 12px; height: 26px; padding: 0 8px; border-radius: 6px; border: 1px solid transparent; background: none; color: var(--muted); opacity: 0; }
+.doc-item:hover .doc-del, .doc-item:focus-within .doc-del, .doc-del.confirm { opacity: 1; }
+.doc-del:hover { border-color: var(--line); }
+.doc-del.confirm { color: var(--danger); border-color: var(--danger); }
+@media (hover: none) { .doc-del { opacity: 1; } }
+
+/* ---------- reader ---------- */
+.reader { min-width: 0; padding-block: 40px 120px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.page { max-width: 70ch; margin: 0 auto; }
+.doc {
+  font-family: var(--font-read); font-size: 18px; line-height: 1.7; color: var(--ink);
+  overflow-wrap: break-word;
+}
+.doc > :first-child { margin-top: 0; }
+.doc h1, .doc h2, .doc h3, .doc h4 { line-height: 1.25; text-wrap: balance; font-weight: 700; }
+.doc h1 { font-size: 2em; margin: 0 0 .6em; letter-spacing: -.01em; }
+.doc h2 { font-size: 1.4em; margin: 1.8em 0 .5em; }
+.doc h3 { font-size: 1.15em; margin: 1.5em 0 .4em; }
+.doc h4 { font-size: 1em; margin: 1.3em 0 .3em; }
+.doc p, .doc ul, .doc ol, .doc blockquote, .doc pre, .doc table, .doc figure { margin: 0 0 1em; }
+.doc ul, .doc ol { padding-left: 1.4em; }
+.doc li { margin: .25em 0; }
+.doc a { color: var(--accent); text-underline-offset: 2px; }
+.doc blockquote { border-left: 3px solid var(--line); padding-left: 1em; color: var(--muted); font-style: italic; }
+.doc code { font-family: var(--font-mono); font-size: .82em; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: .08em .3em; }
+.doc pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; line-height: 1.5; }
+.doc pre code { background: none; border: 0; padding: 0; font-size: .8em; }
+.doc img, .doc svg, .doc video { max-width: 100%; height: auto; }
+.doc hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+.doc .table-wrap { overflow-x: auto; margin: 0 0 1em; }
+.doc table { border-collapse: collapse; font-size: .9em; width: 100%; }
+.doc .table-wrap table { margin: 0; }
+.doc th, .doc td { border-bottom: 1px solid var(--line); padding: .45em .7em; text-align: left; vertical-align: top; }
+.doc th { font-family: var(--font-ui); font-size: .85em; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+.doc .page-mark { font-family: var(--font-mono); font-size: 12px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 6px; margin-top: 2em; }
+.doc .sample-note { font-family: var(--font-ui); font-size: 14px; color: var(--muted); background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 10px 14px; }
+.doc ::selection { background: var(--accent-soft); }
+
+/* highlights */
+mark.hl { color: inherit; border-radius: 2px; padding: .06em 0; -webkit-box-decoration-break: clone; box-decoration-break: clone; cursor: pointer; transition: box-shadow .15s; }
+mark.hl[data-c="y"] { background: var(--hl-y); }
+mark.hl[data-c="g"] { background: var(--hl-g); }
+mark.hl[data-c="b"] { background: var(--hl-b); }
+mark.hl[data-c="p"] { background: var(--hl-p); }
+mark.hl[data-c="o"] { background: var(--hl-o); }
+mark.hl.active { box-shadow: 0 0 0 2px var(--accent); }
+mark.hl.has-note { text-decoration: underline dotted; text-decoration-color: var(--muted); text-underline-offset: 4px; }
+mark.hl.flash { animation: flash 1.1s ease-out; }
+@keyframes flash { 0%, 40% { box-shadow: 0 0 0 4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* review (cloze) mode */
+.doc.review mark.hl { color: transparent; background: var(--blank); text-decoration: none; }
+.doc.review mark.hl * { color: transparent; }
+.doc.review mark.hl[data-c="y"] { box-shadow: inset 0 -2px 0 var(--dot-y); }
+.doc.review mark.hl[data-c="g"] { box-shadow: inset 0 -2px 0 var(--dot-g); }
+.doc.review mark.hl[data-c="b"] { box-shadow: inset 0 -2px 0 var(--dot-b); }
+.doc.review mark.hl[data-c="p"] { box-shadow: inset 0 -2px 0 var(--dot-p); }
+.doc.review mark.hl[data-c="o"] { box-shadow: inset 0 -2px 0 var(--dot-o); }
+.doc.review mark.hl.revealed { color: inherit; }
+.doc.review mark.hl.revealed * { color: inherit; }
+.doc.review mark.hl.revealed[data-c="y"] { background: var(--hl-y); }
+.doc.review mark.hl.revealed[data-c="g"] { background: var(--hl-g); }
+.doc.review mark.hl.revealed[data-c="b"] { background: var(--hl-b); }
+.doc.review mark.hl.revealed[data-c="p"] { background: var(--hl-p); }
+.doc.review mark.hl.revealed[data-c="o"] { background: var(--hl-o); }
+.review-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; margin-bottom: 24px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--ink); font-size: 14px; }
+.review-bar strong { color: var(--accent); font-variant-numeric: tabular-nums; }
+.review-bar .btns { display: flex; gap: 8px; }
+
+/* empty state */
+.empty { text-align: center; padding: 80px 12px; color: var(--muted); }
+.empty h2 { font-family: var(--font-read); color: var(--ink); font-size: 24px; margin: 0 0 8px; text-wrap: balance; }
+.empty p { max-width: 44ch; margin: 0 auto 20px; }
+
+/* ---------- highlights panel ---------- */
+.legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 12px; font-weight: 500; }
+.chip .n { font-family: var(--font-mono); color: var(--muted); font-size: 11px; }
+.chip[aria-pressed="true"] { border-color: var(--ink); background: var(--bg); }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.dot[data-c="y"] { background: var(--dot-y); } .dot[data-c="g"] { background: var(--dot-g); } .dot[data-c="b"] { background: var(--dot-b); }
+.dot[data-c="p"] { background: var(--dot-p); } .dot[data-c="o"] { background: var(--dot-o); }
+.hls { list-style: none; margin: 0; padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+.hli { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface); cursor: pointer; }
+.hli:hover { border-color: var(--muted); }
+.hli.active { border-color: var(--accent); }
+.hli-top { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+.hli-top .lbl { font-weight: 600; color: var(--ink); }
+.hli-top .pos { margin-left: auto; font-family: var(--font-mono); font-size: 11px; }
+.hli q { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-family: var(--font-read); font-size: 14px; line-height: 1.5; margin: 6px 0 0; quotes: none; }
+.hli.orphan q { text-decoration: line-through; color: var(--muted); }
+.hli .note { margin-top: 8px; font-size: 13px; padding: 6px 8px; border-radius: 6px; background: var(--bg); white-space: pre-wrap; }
+.hli .note.add { background: none; padding: 0; color: var(--muted); }
+.hli textarea { width: 100%; margin-top: 8px; min-height: 64px; resize: vertical; border: 1px solid var(--accent); border-radius: 6px; padding: 6px 8px; background: var(--surface); font-size: 13px; }
+.side-empty { padding: 8px 16px; color: var(--muted); }
+.side-empty kbd, .hint kbd { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg); }
+
+/* ---------- floating toolbar ---------- */
+.toolbar { position: fixed; z-index: 40; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 6px; width: max-content; max-width: calc(100vw - 16px); }
+.tb-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.sw { width: 30px; height: 30px; border-radius: 8px; border: 1px solid transparent; background: transparent; display: grid; place-items: center; position: relative; }
+.sw:hover, .sw.on { border-color: var(--line); background: var(--bg); }
+.sw .dot { width: 16px; height: 16px; }
+.sw.on .dot { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.tb-sep { width: 1px; height: 22px; background: var(--line); margin: 0 3px; }
+.tb-btn { height: 30px; padding: 0 9px; border-radius: 8px; border: 1px solid transparent; background: none; font-size: 13px; font-weight: 500; }
+.tb-btn:hover { border-color: var(--line); background: var(--bg); }
+.tb-btn.danger { color: var(--danger); }
+.tb-label { font-size: 12px; color: var(--muted); padding: 2px 4px 6px; }
+.tb-note { padding: 6px 2px 2px; display: flex; flex-direction: column; gap: 6px; width: min(320px, calc(100vw - 32px)); }
+.tb-note textarea { width: 100%; min-height: 72px; resize: vertical; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: var(--bg); font-size: 13px; }
+.tb-note .row { display: flex; justify-content: flex-end; gap: 6px; }
+
+/* ---------- modal ---------- */
+.modal { position: fixed; inset: 0; z-index: 50; background: var(--scrim); display: grid; place-items: center; padding: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.modal-card { width: min(560px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; }
+.modal-head h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.drop { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 22px 16px; border: 1.5px dashed var(--line); border-radius: 10px; cursor: pointer; }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop strong { color: var(--accent); font-weight: 600; }
+.drop span { font-size: 12px; color: var(--muted); }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.paste { min-height: 110px; max-height: 200px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--bg); font-size: 13px; white-space: pre-wrap; outline: none; }
+.paste:focus { border-color: var(--accent); }
+.paste:empty::before { content: attr(data-ph); color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.field input { height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; background: var(--surface); }
+.status { margin: 0; font-size: 13px; min-height: 1.4em; color: var(--muted); }
+.status.err { color: var(--danger); }
+.status.ok { color: var(--accent); }
+.how { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+.how summary { cursor: pointer; color: var(--ink); font-weight: 500; }
+.how ul { margin: 8px 0 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 8px; }
+.copy-area { width: 100%; min-height: 220px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: var(--font-mono); font-size: 12px; background: var(--bg); }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-weight: 500; box-shadow: var(--shadow); }
+.scrim { position: fixed; inset: 0; z-index: 24; background: var(--scrim); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .desk { grid-template-columns: minmax(0, 1fr) 320px; }
+  .lib { position: fixed; z-index: 25; top: 0; bottom: 0; left: 0; height: auto; width: min(320px, 86vw); transform: translateX(-102%); transition: transform .22s ease; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); }
+  .lib.open { transform: none; box-shadow: var(--shadow); }
+  .narrow-only.for-lib { display: inline-flex; }
+}
+@media (max-width: 820px) {
+  .desk { grid-template-columns: minmax(0, 1fr); }
+  .side { position: fixed; z-index: 25; top: 0; bottom: 0; right: 0; height: auto; width: min(360px, 90vw); transform: translateX(102%); transition: transform .22s ease; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .side.open { transform: none; box-shadow: var(--shadow); }
+  .narrow-only.for-side { display: inline-flex; }
+  .doc { font-size: 17px; }
+  .reader { padding-block: 24px 120px; }
+  .btn .wide-label { display: none; }
+  .doc-title { display: none; }
+  .top { gap: 8px; }
+  .brand { flex: 1; }
+}
+@media (max-width: 420px) { .brand-name { display: none; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+</head>
+<body>
+<header class="top">
+  <button class="icon-btn narrow-only for-lib" id="libToggle" aria-label="Open library" aria-controls="lib">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <div class="brand"><span class="brand-mark" aria-hidden="true">A</span><span class="brand-name">Study Highlighter</span></div>
+  <div class="doc-title" id="docTitle"></div>
+  <div class="top-actions">
+    <button class="btn" id="reviewBtn" aria-pressed="false" title="Hide your highlights and test yourself (R)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><path d="M4 20 20 4"/></svg>
+      <span class="wide-label">Review</span>
+    </button>
+    <button class="btn primary" id="addBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="wide-label">Add document</span>
+    </button>
+    <button class="btn narrow-only for-side" id="sideToggle" aria-controls="side" aria-label="Open highlights">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>
+      <span class="count" id="sideCount">0</span>
+    </button>
+  </div>
+</header>
+
+<div class="desk">
+  <aside class="pane lib" id="lib" aria-label="Library">
+    <div class="pane-head"><span class="eyebrow">Library</span><button class="icon-btn narrow-only for-lib" id="libClose" aria-label="Close library">✕</button></div>
+    <ul class="docs" id="docs"></ul>
+    <div class="pane-foot">
+      <button class="btn" id="backupBtn">Copy backup</button>
+      <p class="hint" id="storeHint">Saved in this browser. Copy a backup to move your library to another device, then add the backup with Add document.</p>
+    </div>
+  </aside>
+
+  <main class="reader" id="reader">
+    <div class="page">
+      <div class="review-bar" id="reviewBar" hidden>
+        <span>Review mode. Tap a blank to reveal it. <strong id="revealCount">0 / 0</strong> revealed</span>
+        <span class="btns"><button class="btn" id="revealAll">Reveal all</button><button class="btn" id="hideAll">Hide all</button></span>
+      </div>
+      <article class="doc" id="doc"></article>
+      <div class="empty" id="empty" hidden>
+        <h2>Your library is empty</h2>
+        <p>Add a Claude doc, an artifact, a PDF, or any Markdown or HTML file, then select text to highlight it.</p>
+        <button class="btn primary" id="emptyAdd">Add document</button>
+      </div>
+    </div>
+  </main>
+
+  <aside class="pane side" id="side" aria-label="Highlights">
+    <div class="pane-head"><span class="eyebrow">Highlights</span><button class="icon-btn narrow-only for-side" id="sideClose" aria-label="Close highlights">✕</button></div>
+    <div class="legend" id="legend"></div>
+    <ul class="hls" id="hls"></ul>
+    <div class="pane-foot">
+      <button class="btn" id="exportBtn">Copy highlights as Markdown</button>
+      <p class="hint">Select text, then press <kbd>1</kbd>–<kbd>5</kbd> for a color or <kbd>N</kbd> for a note.</p>
+    </div>
+  </aside>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<div class="toolbar" id="tb" role="toolbar" aria-label="Highlight tools" hidden>
+  <div class="tb-label" id="tbLabel" hidden></div>
+  <div class="tb-row" id="tbRow"></div>
+  <div class="tb-note" id="tbNote" hidden>
+    <textarea id="tbNoteText" placeholder="Why does this matter? What question does it answer?"></textarea>
+    <div class="row"><button class="tb-btn" id="tbNoteCancel">Cancel</button><button class="btn primary" id="tbNoteSave">Save note</button></div>
+  </div>
+</div>
+
+<div class="modal" id="imp" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+    <div class="modal-head"><h2 id="impTitle">Add a document</h2><button class="icon-btn" id="impClose" aria-label="Close">✕</button></div>
+    <label class="drop" id="drop" for="file">
+      <input type="file" id="file" accept=".html,.htm,.md,.markdown,.txt,.pdf,.docx,.json" multiple hidden>
+      <strong>Choose files</strong> or drop them here
+      <span>HTML, Markdown, text, PDF, Word (.docx), or a Study Highlighter backup</span>
+    </label>
+    <div class="or">or paste</div>
+    <div class="paste" id="paste" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Paste content" data-ph="Paste a Claude doc, artifact text, or Markdown here (Ctrl+V or ⌘V). Formatting is kept."></div>
+    <div class="field"><label for="impName">Title</label><input id="impName" placeholder="Taken from the content if left blank"></div>
+    <p class="status" id="impStatus" aria-live="polite"></p>
+    <details class="how">
+      <summary>Getting content out of Claude</summary>
+      <ul>
+        <li><b>Claude Docs:</b> open the doc, select all (Ctrl+A or ⌘A), copy, and paste here. Or export it as Markdown, Word, or PDF and choose that file.</li>
+        <li><b>Artifacts:</b> select the text on the artifact page, copy, and paste here. If you have the artifact's .html file, choose it instead.</li>
+        <li><b>Chat answers:</b> use Claude's copy button under a reply. It copies Markdown, which keeps headings and lists.</li>
+      </ul>
+    </details>
+    <div class="modal-foot"><button class="btn" id="impCancel">Cancel</button><button class="btn primary" id="impAdd" disabled>Add to library</button></div>
+  </div>
+</div>
+
+<div class="modal" id="copyModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="copyTitle">
+    <div class="modal-head"><h2 id="copyTitle">Copy this text</h2><button class="icon-btn" id="copyClose" aria-label="Close">✕</button></div>
+    <p class="hint">Your browser blocked automatic copying. The text is selected: press Ctrl+C or ⌘C.</p>
+    <textarea class="copy-area" id="copyArea" readonly></textarea>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+'use strict';
+
+const COLORS = [
+  { c: 'y', label: 'Key idea' },
+  { c: 'g', label: 'Definition' },
+  { c: 'b', label: 'Example' },
+  { c: 'p', label: 'Question' },
+  { c: 'o', label: 'Review later' },
+];
+const LABEL = Object.fromEntries(COLORS.map(x => [x.c, x.label]));
+const $ = id => document.getElementById(id);
+const docEl = $('doc');
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================= storage ================= */
+const store = {
+  db: null, mem: new Map(),
+  async init() {
+    try {
+      this.db = await new Promise((res, rej) => {
+        const r = indexedDB.open('study-highlighter', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('docs', { keyPath: 'id' });
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+        setTimeout(() => rej(new Error('timeout')), 3000);
+      });
+    } catch (e) { this.db = null; }
+  },
+  os(mode) { return this.db.transaction('docs', mode).objectStore('docs'); },
+  all() {
+    if (!this.db) return Promise.resolve([...this.mem.values()]);
+    return new Promise(res => {
+      try { const r = this.os('readonly').getAll(); r.onsuccess = () => res(r.result || []); r.onerror = () => res([]); }
+      catch (e) { res([...this.mem.values()]); }
+    });
+  },
+  put(d) {
+    this.mem.set(d.id, d);
+    if (!this.db) return Promise.resolve();
+    return new Promise(res => { try { const r = this.os('readwrite').put(d); r.onsuccess = r.onerror = () => res(); } catch (e) { res(); } });
+  },
+  del(id) {
+    this.mem.delete(id);
+    if (!this.db) return Promise.resolve();
+    return new Promise(res => { try { const r = this.os('readwrite').delete(id); r.onsuccess = r.onerror = () => res(); } catch (e) { res(); } });
+  },
+};
+const pref = {
+  get(k, d) { try { const v = localStorage.getItem('sh:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('sh:' + k, JSON.stringify(v)); } catch (e) {} },
+};
+
+/* ================= state ================= */
+let docs = [];
+let current = null;
+let filter = null;
+let review = false;
+let lastColor = pref.get('lastColor', 'y');
+let tbState = null; // {mode:'new', s, e, text, range} | {mode:'edit', id}
+let editingNoteId = null;
+
+const save = () => { if (current) { current.updated = Date.now(); store.put(current); } };
+
+/* ================= text offsets & wrapping ================= */
+const SKIP_WS_PARENTS = new Set(['TABLE', 'TBODY', 'THEAD', 'TFOOT', 'TR', 'UL', 'OL', 'DL', 'DIV', 'SECTION', 'ARTICLE', 'MAIN', 'HEADER', 'FOOTER', 'NAV', 'ASIDE', 'FIGURE', 'BLOCKQUOTE', 'COLGROUP', 'SELECT']);
+
+function textNodes(root) {
+  const out = [];
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let pos = 0, n;
+  while ((n = w.nextNode())) { out.push({ n, s: pos }); pos += n.data.length; }
+  return out;
+}
+
+function wrap(hl) {
+  const { s, e } = hl;
+  for (const { n, s: ns } of textNodes(docEl)) {
+    const len = n.data.length, ne = ns + len;
+    if (ne <= s || ns >= e) continue;
+    const a = Math.max(s, ns) - ns, b = Math.min(e, ne) - ns;
+    if (!n.data.slice(a, b).trim() && (n.parentNode === docEl || SKIP_WS_PARENTS.has(n.parentNode.nodeName))) continue;
+    let node = n;
+    if (b < len) node.splitText(b);
+    if (a > 0) node = node.splitText(a);
+    const m = document.createElement('mark');
+    m.className = 'hl' + (hl.note ? ' has-note' : '');
+    m.dataset.id = hl.id; m.dataset.c = hl.color;
+    node.parentNode.insertBefore(m, node);
+    m.appendChild(node);
+  }
+}
+
+// Make sure a highlight's offsets still point at its text; fall back to the closest match.
+function resolve(hl, full) {
+  if (hl.s >= 0 && full.slice(hl.s, hl.e) === hl.text) { hl.orphan = false; return true; }
+  let best = -1, bestD = Infinity, i = full.indexOf(hl.text);
+  while (i !== -1) { const d = Math.abs(i - (hl.s || 0)); if (d < bestD) { best = i; bestD = d; } i = full.indexOf(hl.text, i + 1); }
+  if (best === -1 || !hl.text) { hl.orphan = true; return false; }
+  hl.s = best; hl.e = best + hl.text.length; hl.orphan = false; return true;
+}
+
+function selectionOffsets() {
+  const sel = getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
+  const r = sel.getRangeAt(0);
+  if (!docEl.contains(r.startContainer) || !docEl.contains(r.endContainer)) return null;
+  const pre = document.createRange();
+  pre.setStart(docEl, 0); pre.setEnd(r.startContainer, r.startOffset);
+  const full = docEl.textContent;
+  let s = pre.toString().length, e = s + r.toString().length;
+  while (s < e && /\s/.test(full[s])) s++;
+  while (e > s && /\s/.test(full[e - 1])) e--;
+  if (e - s < 1) return null;
+  return { s, e, text: full.slice(s, e), range: r.cloneRange() };
+}
+
+/* ================= rendering ================= */
+function renderDoc(keepScroll) {
+  const y = scrollY;
+  hideToolbar();
+  if (!current) {
+    docEl.innerHTML = ''; $('empty').hidden = false; $('docTitle').textContent = '';
+    renderPanel(); return;
+  }
+  $('empty').hidden = true;
+  $('docTitle').textContent = current.title;
+  docEl.innerHTML = current.html;
+  const full = docEl.textContent;
+  let changed = false;
+  const sorted = [...current.highlights].sort((a, b) => a.s - b.s);
+  for (const hl of sorted) {
+    const before = hl.s;
+    if (resolve(hl, full)) { wrap(hl); if (hl.s !== before) changed = true; }
+  }
+  if (changed) save();
+  current.textLen = full.length;
+  docEl.classList.toggle('review', review);
+  renderPanel();
+  if (keepScroll) scrollTo(0, y);
+}
+
+function renderLibrary() {
+  const ul = $('docs');
+  ul.innerHTML = '';
+  const sorted = [...docs].sort((a, b) => (b.opened || b.updated || 0) - (a.opened || a.updated || 0));
+  for (const d of sorted) {
+    const li = document.createElement('li');
+    li.className = 'doc-item' + (current && d.id === current.id ? ' active' : '');
+    const n = d.highlights.length;
+    li.innerHTML = `<button class="doc-open"><strong>${esc(d.title)}</strong><span>${d.sample ? '<span class="tag">Sample</span> ' : ''}${n} highlight${n === 1 ? '' : 's'} · ${(d.words || 0).toLocaleString()} words</span></button><button class="doc-del" aria-label="Delete ${esc(d.title)}">Delete</button>`;
+    li.querySelector('.doc-open').onclick = () => { openDoc(d.id); closeDrawers(); };
+    const del = li.querySelector('.doc-del');
+    del.onclick = () => {
+      if (!del.classList.contains('confirm')) {
+        del.classList.add('confirm'); del.textContent = 'Confirm';
+        setTimeout(() => { del.classList.remove('confirm'); del.textContent = 'Delete'; }, 3000);
+        return;
+      }
+      deleteDoc(d.id);
+    };
+    ul.appendChild(li);
+  }
+  if (!docs.length) ul.innerHTML = '<li class="side-empty">No documents yet.</li>';
+}
+
+function renderPanel() {
+  const hls = current ? current.highlights : [];
+  $('sideCount').textContent = hls.length;
+  const legend = $('legend');
+  legend.innerHTML = '';
+  for (const { c, label } of COLORS) {
+    const n = hls.filter(h => h.color === c).length;
+    const b = document.createElement('button');
+    b.className = 'chip'; b.setAttribute('aria-pressed', String(filter === c));
+    b.innerHTML = `<span class="dot" data-c="${c}"></span>${label}<span class="n">${n}</span>`;
+    b.title = filter === c ? 'Show all colors' : `Show only ${label}`;
+    b.onclick = () => { filter = filter === c ? null : c; renderPanel(); };
+    legend.appendChild(b);
+  }
+  const ul = $('hls');
+  ul.innerHTML = '';
+  const list = hls.filter(h => !filter || h.color === filter).sort((a, b) => a.s - b.s);
+  if (!list.length) {
+    ul.innerHTML = current
+      ? `<li class="side-empty">${filter ? 'No highlights in this color yet.' : 'Select text in the document to highlight it. Press <kbd>1</kbd>–<kbd>5</kbd> to pick a color.'}</li>`
+      : '<li class="side-empty">Open a document to see its highlights.</li>';
+  }
+  const total = current && current.textLen ? current.textLen : 1;
+  for (const h of list) {
+    const li = document.createElement('li');
+    li.className = 'hli' + (h.orphan ? ' orphan' : '') + (tbState && tbState.id === h.id ? ' active' : '');
+    li.dataset.id = h.id;
+    const pct = h.orphan ? 'missing' : Math.round((h.s / total) * 100) + '%';
+    li.innerHTML = `<div class="hli-top"><span class="dot" data-c="${h.color}"></span><span class="lbl">${LABEL[h.color]}</span><span class="pos" title="Position in the document">${pct}</span></div><q>${esc(h.text)}</q>`;
+    if (editingNoteId === h.id) {
+      const ta = document.createElement('textarea');
+      ta.value = h.note || ''; ta.placeholder = 'Add a note';
+      ta.onclick = e => e.stopPropagation();
+      ta.onblur = () => { setNote(h.id, ta.value); editingNoteId = null; renderPanel(); };
+      ta.onkeydown = e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ta.blur(); if (e.key === 'Escape') { editingNoteId = null; renderPanel(); } };
+      li.appendChild(ta);
+      setTimeout(() => ta.focus(), 0);
+    } else {
+      const note = document.createElement('div');
+      note.className = 'note' + (h.note ? '' : ' add');
+      note.textContent = h.note || '+ Add note';
+      note.onclick = e => { e.stopPropagation(); editingNoteId = h.id; renderPanel(); };
+      li.appendChild(note);
+    }
+    li.onclick = () => { if (!h.orphan) { jumpTo(h.id); if (matchMedia('(max-width: 820px)').matches) closeDrawers(); } };
+    ul.appendChild(li);
+  }
+  updateRevealCount();
+}
+
+function marksFor(id) { return [...docEl.querySelectorAll(`mark.hl[data-id="${CSS.escape(id)}"]`)]; }
+
+function jumpTo(id) {
+  const ms = marksFor(id);
+  if (!ms.length) return;
+  ms[0].scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+  ms.forEach(m => { m.classList.remove('flash'); void m.offsetWidth; m.classList.add('flash'); });
+  if (!review) setTimeout(() => showEditToolbar(id), reduced ? 0 : 350);
+}
+
+/* ================= highlight actions ================= */
+function createHighlight(color, withNote) {
+  if (!tbState || tbState.mode !== 'new' || !current) return;
+  const { s, e, text } = tbState;
+  const hl = { id: uid(), s, e, text, color, note: '', created: Date.now() };
+  current.highlights.push(hl);
+  wrap(hl);
+  try { getSelection().removeAllRanges(); } catch (err) {}
+  lastColor = color; pref.set('lastColor', color);
+  save(); renderPanel(); renderLibraryCounts();
+  showEditToolbar(hl.id, withNote);
+}
+
+function recolor(id, color) {
+  const h = current.highlights.find(x => x.id === id);
+  if (!h) return;
+  h.color = color; lastColor = color; pref.set('lastColor', color);
+  marksFor(id).forEach(m => { m.dataset.c = color; });
+  save(); renderPanel(); showEditToolbar(id);
+}
+
+function setNote(id, text) {
+  const h = current && current.highlights.find(x => x.id === id);
+  if (!h) return;
+  h.note = text.trim();
+  marksFor(id).forEach(m => m.classList.toggle('has-note', !!h.note));
+  save();
+}
+
+function removeHighlight(id) {
+  current.highlights = current.highlights.filter(h => h.id !== id);
+  save(); renderDoc(true); renderLibraryCounts(); toast('Highlight removed');
+}
+
+function renderLibraryCounts() { renderLibrary(); }
+
+/* ================= toolbar ================= */
+const tb = $('tb');
+const isTouch = matchMedia('(pointer: coarse)').matches;
+
+function buildToolbar(activeColor, isEdit) {
+  const row = $('tbRow');
+  row.innerHTML = '';
+  COLORS.forEach(({ c, label }, i) => {
+    const b = document.createElement('button');
+    b.className = 'sw' + (activeColor === c ? ' on' : '');
+    b.title = `${label} (${i + 1})`; b.setAttribute('aria-label', `${isEdit ? 'Change to' : 'Highlight as'} ${label}`);
+    b.innerHTML = `<span class="dot" data-c="${c}"></span>`;
+    b.onclick = () => isEdit ? recolor(tbState.id, c) : createHighlight(c);
+    row.appendChild(b);
+  });
+  const sep = document.createElement('span'); sep.className = 'tb-sep'; row.appendChild(sep);
+  const note = document.createElement('button'); note.className = 'tb-btn'; note.textContent = 'Note'; note.title = 'Add a note (N)';
+  note.onclick = () => isEdit ? openNote() : createHighlight(lastColor, true);
+  row.appendChild(note);
+  const copy = document.createElement('button'); copy.className = 'tb-btn'; copy.textContent = 'Copy';
+  copy.onclick = () => {
+    const t = isEdit ? (current.highlights.find(h => h.id === tbState.id) || {}).text : tbState.text;
+    copyText(t || '', 'Text copied');
+  };
+  row.appendChild(copy);
+  if (isEdit) {
+    const del = document.createElement('button'); del.className = 'tb-btn danger'; del.textContent = 'Remove'; del.title = 'Remove highlight (Delete)';
+    del.onclick = () => removeHighlight(tbState.id);
+    row.appendChild(del);
+  }
+}
+
+function showNewToolbar(sel) {
+  tbState = { mode: 'new', ...sel };
+  $('tbLabel').hidden = true; $('tbNote').hidden = true;
+  buildToolbar(null, false);
+  tb.hidden = false;
+  positionToolbar();
+}
+
+function showEditToolbar(id, withNote) {
+  const h = current && current.highlights.find(x => x.id === id);
+  if (!h) return;
+  docEl.querySelectorAll('mark.hl.active').forEach(m => m.classList.remove('active'));
+  marksFor(id).forEach(m => m.classList.add('active'));
+  tbState = { mode: 'edit', id };
+  $('tbLabel').hidden = false; $('tbLabel').textContent = LABEL[h.color] + (h.note ? ' · has a note' : '');
+  $('tbNote').hidden = true;
+  buildToolbar(h.color, true);
+  tb.hidden = false;
+  document.querySelectorAll('.hli').forEach(li => li.classList.toggle('active', li.dataset.id === id));
+  if (withNote) openNote(); else positionToolbar();
+}
+
+function openNote() {
+  const h = current.highlights.find(x => x.id === tbState.id);
+  if (!h) return;
+  $('tbNote').hidden = false;
+  $('tbNoteText').value = h.note || '';
+  positionToolbar();
+  setTimeout(() => $('tbNoteText').focus(), 0);
+}
+
+function hideToolbar() {
+  tb.hidden = true; tbState = null;
+  docEl.querySelectorAll('mark.hl.active').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.hli.active').forEach(li => li.classList.remove('active'));
+}
+
+function anchorRect() {
+  if (!tbState) return null;
+  if (tbState.mode === 'new') return tbState.range.getBoundingClientRect();
+  const ms = marksFor(tbState.id);
+  if (!ms.length) return null;
+  const a = ms[0].getClientRects()[0] || ms[0].getBoundingClientRect();
+  const lastRects = ms[ms.length - 1].getClientRects();
+  const b = lastRects[lastRects.length - 1] || a;
+  return { top: a.top, bottom: b.bottom, left: Math.min(a.left, b.left), right: Math.max(a.right, b.right), width: Math.max(a.right, b.right) - Math.min(a.left, b.left) };
+}
+
+function positionToolbar() {
+  if (tb.hidden) return;
+  const r = anchorRect();
+  if (!r) { hideToolbar(); return; }
+  const w = tb.offsetWidth, h = tb.offsetHeight, gap = 10;
+  const headBottom = document.querySelector('.top').getBoundingClientRect().bottom;
+  let top = r.top - h - gap;
+  if (isTouch || top < headBottom + 4) top = r.bottom + gap + (isTouch ? 18 : 0);
+  if (top + h > innerHeight - 8) top = Math.max(headBottom + 4, r.top - h - gap);
+  let left = r.left + r.width / 2 - w / 2;
+  left = Math.max(8, Math.min(left, innerWidth - w - 8));
+  tb.style.top = top + 'px'; tb.style.left = left + 'px';
+}
+
+let rafPending = false;
+const schedulePosition = () => { if (rafPending) return; rafPending = true; requestAnimationFrame(() => { rafPending = false; positionToolbar(); }); };
+addEventListener('scroll', schedulePosition, { passive: true });
+addEventListener('resize', schedulePosition);
+
+tb.addEventListener('mousedown', e => { if (e.target.tagName !== 'TEXTAREA') e.preventDefault(); });
+$('tbNoteSave').onclick = () => { if (tbState && tbState.mode === 'edit') { setNote(tbState.id, $('tbNoteText').value); renderPanel(); showEditToolbar(tbState.id); toast('Note saved'); } };
+$('tbNoteCancel').onclick = () => { $('tbNote').hidden = true; positionToolbar(); };
+$('tbNoteText').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('tbNoteSave').click(); }
+  if (e.key === 'Escape') { e.preventDefault(); $('tbNoteCancel').click(); }
+});
+
+function checkSelection() {
+  if (!current) return;
+  const sel = selectionOffsets();
+  if (sel) showNewToolbar(sel);
+}
+
+document.addEventListener('pointerdown', e => {
+  if (tb.contains(e.target)) return;
+  if (tbState && e.target.closest && !e.target.closest('mark.hl') && !e.target.closest('.hli')) hideToolbar();
+});
+docEl.addEventListener('mouseup', () => setTimeout(checkSelection, 0));
+docEl.addEventListener('keyup', e => { if (e.shiftKey) checkSelection(); });
+let selTimer = null;
+document.addEventListener('selectionchange', () => {
+  clearTimeout(selTimer);
+  selTimer = setTimeout(() => { const s = getSelection(); if (s && !s.isCollapsed) checkSelection(); }, isTouch ? 350 : 500);
+});
+
+docEl.addEventListener('click', e => {
+  const m = e.target.closest('mark.hl');
+  if (!m) return;
+  const sel = getSelection();
+  if (sel && !sel.isCollapsed) return;
+  e.preventDefault();
+  const id = m.dataset.id;
+  if (review) {
+    const ms = marksFor(id);
+    const show = !ms[0].classList.contains('revealed');
+    ms.forEach(x => x.classList.toggle('revealed', show));
+    updateRevealCount();
+    return;
+  }
+  showEditToolbar(id);
+});
+
+/* ================= review mode ================= */
+function setReview(on) {
+  review = on;
+  $('reviewBtn').setAttribute('aria-pressed', String(on));
+  $('reviewBar').hidden = !on || !current;
+  docEl.classList.toggle('review', on);
+  if (on) { hideToolbar(); try { getSelection().removeAllRanges(); } catch (e) {} }
+  docEl.querySelectorAll('mark.hl.revealed').forEach(m => m.classList.remove('revealed'));
+  updateRevealCount();
+}
+function updateRevealCount() {
+  if (!current) return;
+  const ids = new Set(current.highlights.filter(h => !h.orphan).map(h => h.id));
+  const shown = new Set([...docEl.querySelectorAll('mark.hl.revealed')].map(m => m.dataset.id));
+  $('revealCount').textContent = `${shown.size} / ${ids.size}`;
+}
+$('reviewBtn').onclick = () => {
+  if (current && !current.highlights.length && !review) { toast('Highlight something first, then review it'); return; }
+  setReview(!review);
+};
+$('revealAll').onclick = () => { docEl.querySelectorAll('mark.hl').forEach(m => m.classList.add('revealed')); updateRevealCount(); };
+$('hideAll').onclick = () => { docEl.querySelectorAll('mark.hl').forEach(m => m.classList.remove('revealed')); updateRevealCount(); };
+
+/* ================= keyboard ================= */
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if (t.closest && (t.closest('input, textarea, [contenteditable="true"]'))) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!$('imp').hidden) { if (e.key === 'Escape') closeImport(); return; }
+  if (e.key === 'Escape') { hideToolbar(); try { getSelection().removeAllRanges(); } catch (err) {} closeDrawers(); return; }
+  if (e.key === 'r' || e.key === 'R') { $('reviewBtn').click(); return; }
+  if (!tbState) {
+    const sel = selectionOffsets();
+    if (sel && /^[1-5nN]$/.test(e.key)) showNewToolbar(sel); else return;
+  }
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 5) {
+    e.preventDefault();
+    const c = COLORS[n - 1].c;
+    tbState.mode === 'new' ? createHighlight(c) : recolor(tbState.id, c);
+  } else if (e.key === 'n' || e.key === 'N') {
+    e.preventDefault();
+    tbState.mode === 'new' ? createHighlight(lastColor, true) : openNote();
+  } else if ((e.key === 'Delete' || e.key === 'Backspace') && tbState.mode === 'edit') {
+    e.preventDefault(); removeHighlight(tbState.id);
+  }
+});
+
+/* ================= drawers ================= */
+function closeDrawers() { $('lib').classList.remove('open'); $('side').classList.remove('open'); $('scrim').hidden = true; }
+function openDrawer(id) { closeDrawers(); $(id).classList.add('open'); $('scrim').hidden = false; hideToolbar(); }
+$('libToggle').onclick = () => openDrawer('lib');
+$('sideToggle').onclick = () => openDrawer('side');
+$('libClose').onclick = $('sideClose').onclick = $('scrim').onclick = closeDrawers;
+
+/* ================= documents ================= */
+async function openDoc(id) {
+  const d = docs.find(x => x.id === id);
+  if (!d) return;
+  current = d; filter = null; editingNoteId = null;
+  d.opened = Date.now(); store.put(d);
+  pref.set('lastDoc', id);
+  setReview(false);
+  renderDoc(); renderLibrary();
+  scrollTo(0, 0);
+}
+
+async function deleteDoc(id) {
+  await store.del(id);
+  docs = docs.filter(d => d.id !== id);
+  if (current && current.id === id) { current = null; if (docs.length) { openDoc([...docs].sort((a, b) => (b.opened || 0) - (a.opened || 0))[0].id); } else { renderDoc(); } }
+  renderLibrary(); toast('Document deleted');
+}
+
+async function addDoc({ title, html, source }) {
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  const words = (tmp.textContent.match(/\S+/g) || []).length;
+  const d = { id: uid(), title: (title || 'Untitled').trim().slice(0, 140), html, source: source || 'paste', highlights: [], words, created: Date.now(), updated: Date.now() };
+  docs.push(d); await store.put(d);
+  return d;
+}
+
+/* ================= import: conversion ================= */
+function sanitize(html, keepClass) {
+  if (window.DOMPurify) {
+    return DOMPurify.sanitize(html, {
+      FORBID_TAGS: ['style', 'link', 'meta', 'form', 'input', 'button', 'select', 'textarea', 'iframe', 'object', 'embed', 'canvas', 'noscript', 'dialog'],
+      FORBID_ATTR: ['style', 'id', 'contenteditable', 'tabindex', 'draggable', 'width', 'height'].concat(keepClass ? [] : ['class']),
+      ALLOW_DATA_ATTR: false,
+    });
+  }
+  const tpl = document.createElement('template'); tpl.innerHTML = html;
+  tpl.content.querySelectorAll('script,style,link,meta,iframe,object,embed,form,input,button,select,textarea,canvas,noscript').forEach(n => n.remove());
+  tpl.content.querySelectorAll('*').forEach(el => {
+    [...el.attributes].forEach(a => {
+      const n = a.name.toLowerCase();
+      if (n.startsWith('on') || ['style', 'class', 'id', 'contenteditable', 'tabindex'].includes(n) || /^\s*javascript:/i.test(a.value)) el.removeAttribute(a.name);
+    });
+  });
+  return tpl.innerHTML;
+}
+
+function tidy(root) {
+  root.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+  root.querySelectorAll('[hidden], [aria-hidden="true"]').forEach(n => { if (n.tagName !== 'svg' && n.tagName !== 'SVG') n.remove(); });
+  root.querySelectorAll('table').forEach(t => {
+    if (t.parentElement && t.parentElement.classList.contains('table-wrap')) return;
+    const w = document.createElement('div'); w.className = 'table-wrap';
+    t.parentNode.insertBefore(w, t); w.appendChild(t);
+  });
+  // drop empty wrappers left over from app markup
+  root.querySelectorAll('div, span, section').forEach(n => { if (!n.textContent.trim() && !n.querySelector('img, svg, video, hr, table')) n.remove(); });
+}
+
+function fromHtml(raw, fallbackTitle) {
+  const parsed = new DOMParser().parseFromString(raw, 'text/html');
+  const t = parsed.querySelector('title');
+  const docTitle = t ? t.textContent.trim() : '';
+  const body = parsed.body ? parsed.body.innerHTML : raw;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = sanitize(body);
+  tidy(tmp);
+  const h = tmp.querySelector('h1, h2');
+  const title = docTitle || (h && h.textContent.trim()) || fallbackTitle || firstLine(tmp.textContent);
+  return { title, html: tmp.innerHTML, textLen: tmp.textContent.trim().length };
+}
+
+function fromMarkdown(md, fallbackTitle) {
+  let html;
+  if (window.marked && marked.parse) html = marked.parse(md, { gfm: true });
+  else html = md.split(/\n{2,}/).map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+  const r = fromHtml(`<body>${html}</body>`, fallbackTitle || firstLine(md.replace(/^#+\s*/, '')));
+  return r;
+}
+
+const firstLine = s => (String(s).trim().split('\n')[0] || 'Untitled').replace(/^#+\s*/, '').slice(0, 90);
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) return res();
+    const s = document.createElement('script'); s.src = src;
+    s.onload = () => res(); s.onerror = () => rej(new Error('Could not load a helper library. Check your connection and try again.'));
+    document.head.appendChild(s);
+  });
+}
+
+async function fromPdf(buf, name) {
+  const base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  await loadScript(base + 'pdf.min.js');
+  await loadScript(base + 'pdf.worker.min.js'); // runs in the page; no separate worker needed
+  const lib = window.pdfjsLib;
+  const pdf = await lib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise;
+  let html = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    const lines = []; let line = '', lastY = null, lastH = 10;
+    for (const it of tc.items) {
+      if (!('str' in it)) continue;
+      const y = it.transform[5];
+      if (lastY !== null && Math.abs(y - lastY) > 2) { lines.push({ t: line, y: lastY, h: lastH }); line = ''; }
+      line += it.str; lastY = y; if (it.height) lastH = it.height;
+    }
+    if (line) lines.push({ t: line, y: lastY, h: lastH });
+    const paras = []; let cur = '';
+    lines.forEach((ln, k) => {
+      const prev = lines[k - 1];
+      const gap = prev ? prev.y - ln.y : 0;
+      if (prev && (gap > prev.h * 1.75 || gap < 0)) { if (cur.trim()) paras.push(cur.trim()); cur = ''; }
+      const t = ln.t.trim();
+      if (!t) return;
+      cur = cur.endsWith('-') ? cur.slice(0, -1) + t : (cur ? cur + ' ' + t : t);
+    });
+    if (cur.trim()) paras.push(cur.trim());
+    if (pdf.numPages > 1) html += `<p class="page-mark">Page ${i}</p>`;
+    html += paras.map(p => `<p>${esc(p)}</p>`).join('');
+  }
+  const title = name.replace(/\.pdf$/i, '');
+  return { title, html, textLen: html.replace(/<[^>]+>/g, '').trim().length };
+}
+
+async function fromDocx(buf, name) {
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+  const out = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+  return fromHtml(`<body>${out.value}</body>`, name.replace(/\.docx$/i, ''));
+}
+
+async function restoreBackup(text) {
+  const data = JSON.parse(text);
+  if (!data || data.app !== 'study-highlighter' || !Array.isArray(data.docs)) throw new Error('This JSON file is not a Study Highlighter backup.');
+  let n = 0;
+  for (const d of data.docs) {
+    if (!d || !d.id || typeof d.html !== 'string') continue;
+    d.html = sanitize(d.html, true);
+    d.highlights = Array.isArray(d.highlights) ? d.highlights : [];
+    const i = docs.findIndex(x => x.id === d.id);
+    if (i >= 0) docs[i] = d; else docs.push(d);
+    await store.put(d); n++;
+  }
+  return n;
+}
+
+const TOO_LITTLE = 'This has almost no readable text. If it is an artifact that draws its content with scripts, open it, select the text on the page, copy it, and paste it here instead.';
+
+/* ================= import: UI ================= */
+let pending = null; // {kind:'html'|'text', data}
+const paste = $('paste');
+
+function setStatus(msg, kind) { const s = $('impStatus'); s.textContent = msg || ''; s.className = 'status' + (kind ? ' ' + kind : ''); }
+
+function openImport() {
+  closeDrawers(); hideToolbar();
+  pending = null; paste.textContent = ''; $('impName').value = ''; setStatus('');
+  $('impAdd').disabled = true;
+  $('imp').hidden = false;
+  setTimeout(() => paste.focus(), 30);
+}
+function closeImport() { $('imp').hidden = true; }
+
+$('addBtn').onclick = openImport;
+$('emptyAdd').onclick = openImport;
+$('impClose').onclick = $('impCancel').onclick = closeImport;
+$('imp').addEventListener('click', e => { if (e.target === $('imp')) closeImport(); });
+
+paste.addEventListener('paste', e => {
+  e.preventDefault();
+  const cd = e.clipboardData;
+  const html = cd.getData('text/html');
+  const text = cd.getData('text/plain');
+  if (!html && !text) { setStatus('Nothing to paste. Copy some text first.', 'err'); return; }
+  pending = html && html.replace(/<[^>]+>/g, '').trim() ? { kind: 'html', data: html } : { kind: 'text', data: text };
+  const preview = pending.kind === 'html' ? new DOMParser().parseFromString(html, 'text/html').body.textContent : text;
+  paste.textContent = preview.trim().slice(0, 1200) + (preview.length > 1200 ? ' …' : '');
+  const words = (preview.match(/\S+/g) || []).length;
+  setStatus(`Ready: about ${words.toLocaleString()} words${pending.kind === 'html' ? ' with formatting' : ''}.`, 'ok');
+  $('impAdd').disabled = false;
+});
+paste.addEventListener('input', () => {
+  const t = paste.innerText;
+  if (pending && pending.kind === 'html') return; // preview text, keep the rich version
+  pending = t.trim() ? { kind: 'text', data: t } : null;
+  $('impAdd').disabled = !pending;
+  if (pending) setStatus(`Ready: about ${(t.match(/\S+/g) || []).length.toLocaleString()} words.`, 'ok');
+});
+paste.addEventListener('keydown', e => {
+  // typing after a rich paste switches to plain text
+  if (pending && pending.kind === 'html' && (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete') && !(e.metaKey || e.ctrlKey)) {
+    pending = null; paste.textContent = ''; setStatus(''); $('impAdd').disabled = true;
+  }
+});
+
+$('impAdd').onclick = async () => {
+  if (!pending) return;
+  let r;
+  if (pending.kind === 'html') r = fromHtml(pending.data);
+  else {
+    const t = pending.data.trim();
+    if (t.startsWith('{') && t.includes('"study-highlighter"')) {
+      try { const n = await restoreBackup(t); closeImport(); renderLibrary(); if (!current && docs.length) openDoc(docs[0].id); toast(`Restored ${n} document${n === 1 ? '' : 's'}`); }
+      catch (err) { setStatus(err.message, 'err'); }
+      return;
+    }
+    r = fromMarkdown(t);
+  }
+  if (r.textLen < 40) { setStatus(TOO_LITTLE, 'err'); return; }
+  const d = await addDoc({ title: $('impName').value.trim() || r.title, html: r.html, source: 'paste' });
+  closeImport(); openDoc(d.id); toast('Added to your library');
+};
+
+async function handleFiles(files) {
+  let added = null, count = 0;
+  for (const f of files) {
+    const name = f.name || 'Untitled';
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    try {
+      setStatus(`Reading ${name}…`);
+      let r;
+      if (ext === 'json') {
+        const n = await restoreBackup(await f.text());
+        toast(`Restored ${n} document${n === 1 ? '' : 's'}`); count += n; continue;
+      } else if (ext === 'pdf') r = await fromPdf(await f.arrayBuffer(), name);
+      else if (ext === 'docx') r = await fromDocx(await f.arrayBuffer(), name);
+      else if (ext === 'html' || ext === 'htm') r = fromHtml(await f.text(), name.replace(/\.html?$/i, ''));
+      else if (['md', 'markdown', 'txt', 'text', ''].includes(ext)) r = fromMarkdown(await f.text(), name.replace(/\.(md|markdown|txt|text)$/i, ''));
+      else { setStatus(`${name}: this file type isn't supported. Use HTML, Markdown, text, PDF, or .docx.`, 'err'); continue; }
+      if (r.textLen < 40) { setStatus(`${name}: ${TOO_LITTLE}`, 'err'); continue; }
+      const title = files.length === 1 && $('impName').value.trim() ? $('impName').value.trim() : r.title;
+      added = await addDoc({ title, html: r.html, source: name }); count++;
+    } catch (err) {
+      setStatus(`${name}: ${err && err.message ? err.message : 'could not be read.'}`, 'err');
+    }
+  }
+  if (count) {
+    closeImport(); renderLibrary();
+    if (added) { openDoc(added.id); toast(files.length > 1 ? `Added ${count} documents` : 'Added to your library'); }
+    else if (!current && docs.length) openDoc(docs[0].id);
+  }
+}
+
+$('file').addEventListener('change', e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) handleFiles(fs); });
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { const fs = [...(e.dataTransfer && e.dataTransfer.files || [])]; if (fs.length) handleFiles(fs); });
+// dropping a file anywhere on the page opens it too
+document.addEventListener('dragover', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+document.addEventListener('drop', e => {
+  if (drop.contains(e.target)) return;
+  const fs = [...(e.dataTransfer && e.dataTransfer.files || [])];
+  if (fs.length) { e.preventDefault(); handleFiles(fs); }
+});
+
+/* ================= export ================= */
+function toMarkdown(d) {
+  const lines = [`# ${d.title}`, ''];
+  const sorted = [...d.highlights].sort((a, b) => a.s - b.s);
+  for (const { c, label } of COLORS) {
+    const group = sorted.filter(h => h.color === c);
+    if (!group.length) continue;
+    lines.push(`## ${label}`, '');
+    for (const h of group) {
+      lines.push(`- ${h.text.replace(/\s+/g, ' ')}`);
+      if (h.note) lines.push(`  - *Note:* ${h.note.replace(/\n+/g, ' ')}`);
+    }
+    lines.push('');
+  }
+  return lines.join('\n').trim() + '\n';
+}
+
+$('exportBtn').onclick = () => {
+  if (!current) { toast('Open a document first'); return; }
+  if (!current.highlights.length) { toast('No highlights to copy yet'); return; }
+  copyText(toMarkdown(current), 'Highlights copied as Markdown');
+};
+$('backupBtn').onclick = () => {
+  if (!docs.length) { toast('Your library is empty'); return; }
+  const data = { app: 'study-highlighter', version: 1, exported: new Date().toISOString(), docs: docs.map(d => ({ ...d, orphan: undefined })) };
+  copyText(JSON.stringify(data), `Backup of ${docs.length} document${docs.length === 1 ? '' : 's'} copied`);
+};
+
+async function copyText(text, msg) {
+  try { await navigator.clipboard.writeText(text); toast(msg); }
+  catch (e) {
+    $('copyArea').value = text; $('copyModal').hidden = false;
+    setTimeout(() => { $('copyArea').focus(); $('copyArea').select(); }, 20);
+  }
+}
+$('copyClose').onclick = () => { $('copyModal').hidden = true; };
+$('copyModal').addEventListener('click', e => { if (e.target === $('copyModal')) $('copyModal').hidden = true; });
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+}
+
+/* ================= sample ================= */
+const SAMPLE_HTML = `
+<h1>Study Smarter: Retrieval, Spacing, and Interleaving</h1>
+<p class="sample-note">This is a sample document with a few highlights already added. Select any text to add your own, try Review in the header, then delete this sample from the library whenever you like.</p>
+<h2>Why rereading feels better than it works</h2>
+<p>Rereading a chapter makes the material feel familiar, and familiarity is easy to mistake for knowing. Psychologists call this the <em>fluency illusion</em>: because the words on the page are easy to process, we judge that we have learned them. The real test comes later, when the page is closed and you have to produce the idea yourself.</p>
+<h2>Retrieval practice</h2>
+<p><strong>Retrieval practice</strong> means pulling information out of memory instead of putting it back in. In a 2006 study, Henry Roediger and Jeffrey Karpicke had students read short prose passages. Students who studied once and then took recall tests remembered more a week later than students who reread the passage several times, even though the rereaders predicted they would do better.</p>
+<p>Ways to practice retrieval:</p>
+<ul>
+<li>Close the book and write down everything you remember, then check what you missed.</li>
+<li>Answer practice questions before looking at the solutions.</li>
+<li>Explain a concept out loud to someone who hasn't studied it.</li>
+<li>Use flashcards, and say the answer before you flip the card.</li>
+</ul>
+<h2>Spacing</h2>
+<p>In 1885 Hermann Ebbinghaus published his experiments on memorizing lists of nonsense syllables. He found that forgetting is fastest right after learning and then slows down, a pattern now called the forgetting curve. He also found that reviews spread over several days produced better retention than the same number of reviews crammed into one session. This is the spacing effect, and it is one of the most reliable findings in the study of memory.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Review</th><th>Wait after the previous review</th></tr></thead>
+<tbody>
+<tr><td>1st</td><td>1 day</td></tr>
+<tr><td>2nd</td><td>3 days</td></tr>
+<tr><td>3rd</td><td>1 week</td></tr>
+<tr><td>4th</td><td>2 weeks</td></tr>
+<tr><td>5th</td><td>1 month</td></tr>
+</tbody></table></div>
+<p>The table shows one common starting schedule. Widen the gap when recall is easy, and shorten it when recall is hard.</p>
+<h2>Interleaving</h2>
+<p>Interleaving means mixing different kinds of problems in one session instead of practicing one kind at a time. Blocked practice (ten problems of type A, then ten of type B) feels smoother, but interleaved practice forces you to decide which method a problem needs. That decision is exactly the skill an exam tests.</p>
+<h2>Using this with your highlights</h2>
+<p>Pick a meaning for each color and stick with it. Mark key ideas, definitions, examples, open questions, and anything you want to revisit. When you finish a reading, switch on Review: your highlights turn into blanks, and each blank becomes a retrieval prompt.</p>`;
+
+const SAMPLE_HLS = [
+  ['familiarity is easy to mistake for knowing', 'y', ''],
+  ['pulling information out of memory instead of putting it back in', 'g', ''],
+  ['Students who studied once and then took recall tests remembered more a week later', 'b', ''],
+  ['even though the rereaders predicted they would do better', 'p', 'Why are we so bad at judging our own learning? Link to the fluency illusion.'],
+  ['reviews spread over several days produced better retention than the same number of reviews crammed into one session', 'y', ''],
+  ['forces you to decide which method a problem needs', 'b', ''],
+  ['Widen the gap when recall is easy, and shorten it when recall is hard.', 'o', 'Try this schedule for the next unit.'],
+];
+
+async function seedSample() {
+  const d = await addDoc({ title: 'Study Smarter (sample)', html: SAMPLE_HTML.trim(), source: 'sample' });
+  d.sample = true;
+  d.highlights = SAMPLE_HLS.map(([text, color, note], i) => ({ id: uid() + i, s: -1, e: -1, text, color, note, created: Date.now() }));
+  await store.put(d);
+  pref.set('seeded', true);
+  return d;
+}
+
+/* ================= boot ================= */
+async function boot() {
+  await store.init();
+  if (!store.db) $('storeHint').textContent = 'This browser is not saving your library (private window or blocked storage). Use Copy backup before you leave.';
+  docs = await store.all();
+  docs.forEach(d => { d.highlights = d.highlights || []; });
+  if (!docs.length && !pref.get('seeded', false)) await seedSample();
+  else if (!docs.length && !store.db) await seedSample();
+  renderLibrary();
+  const last = pref.get('lastDoc', null);
+  const pick = docs.find(d => d.id === last) || [...docs].sort((a, b) => (b.opened || b.updated || 0) - (a.opened || a.updated || 0))[0];
+  if (pick) openDoc(pick.id); else renderDoc();
+}
+boot();
+})();
+</script>
+
+</body>
+</html>
