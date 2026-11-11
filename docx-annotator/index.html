@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DOCX Annotator</title>
+<meta name="description" content="Highlight, take notes and write on top of any Word document — fully offline.">
+<meta name="theme-color" content="#1f2937">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="toolbar">
+  <div class="group">
+    <button id="btn-home" class="icon" title="Library (recent documents)" aria-label="Library">&#8962;</button>
+    <label class="btn primary" title="Open a .docx file (Ctrl+O)">
+      Open .docx
+      <input id="file-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+    </label>
+    <span id="doc-name" class="doc-name"></span>
+  </div>
+
+  <div class="group needs-doc" role="toolbar" aria-label="Tools">
+    <button class="tool" data-tool="select" title="Select / click annotations (V)">&#10022; <span class="tl">Select</span></button>
+    <button class="tool" data-tool="highlight" title="Highlight text — select text to highlight (H)">&#9611; <span class="tl">Highlight</span></button>
+    <button class="tool" data-tool="pen" title="Pen — draw on the page (P)">&#9998; <span class="tl">Pen</span></button>
+    <button class="tool" data-tool="marker" title="Freehand marker — translucent ink (M)">&#9644; <span class="tl">Marker</span></button>
+    <button class="tool" data-tool="text" title="Text — click anywhere on a page to type (T)">T <span class="tl">Text</span></button>
+    <button class="tool" data-tool="eraser" title="Eraser — drag over ink to erase (E)">&#9003; <span class="tl">Eraser</span></button>
+  </div>
+
+  <div class="group needs-doc">
+    <span class="lbl">Highlight</span>
+    <div id="hl-colors" class="swatches"></div>
+    <span class="lbl">Ink</span>
+    <input id="pen-color" type="color" value="#e11d48" title="Ink / text colour">
+    <input id="pen-size" type="range" min="1" max="12" value="3" title="Ink width / text size">
+  </div>
+
+  <div class="group needs-doc">
+    <button id="btn-undo" class="icon" title="Undo (Ctrl+Z)" aria-label="Undo">&#8630;</button>
+    <button id="btn-redo" class="icon" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">&#8631;</button>
+    <button id="btn-zoom-out" class="icon" title="Zoom out" aria-label="Zoom out">&minus;</button>
+    <button id="zoom-label" title="Fit page to window">100%</button>
+    <button id="btn-zoom-in" class="icon" title="Zoom in" aria-label="Zoom in">+</button>
+    <button id="btn-sidebar" title="Show / hide notes panel">Notes <span id="note-count" class="badge">0</span></button>
+    <div class="menu">
+      <button id="btn-export" class="primary">Save / Export &#9662;</button>
+      <div id="export-menu" class="menu-pop" hidden>
+        <button data-act="docx"><b>Save annotated .docx</b><small>Highlights + notes become Word comments</small></button>
+        <button data-act="print"><b>Print / Save as PDF</b><small>Includes ink, text and highlights</small></button>
+        <button data-act="json"><b>Back up annotations (.json)</b><small>Move your notes to another device</small></button>
+        <button data-act="import"><b>Restore annotations (.json)</b><small>Load a backup onto this document</small></button>
+      </div>
+      <input id="json-input" type="file" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section id="home">
+    <div id="drop" class="drop">
+      <div class="drop-icon">&#128196;</div>
+      <h1>DOCX Annotator</h1>
+      <p>Highlight, add notes and write on top of any Word document.<br>Everything stays on your device and works offline.</p>
+      <label class="btn primary big">Choose a .docx file<input id="file-input-2" type="file" accept=".docx" hidden></label>
+      <p class="hint">…or drop a file anywhere on this window</p>
+    </div>
+    <div id="recent-wrap" hidden>
+      <h2>Recent documents</h2>
+      <ul id="recent"></ul>
+    </div>
+    <p id="install-hint" class="hint"></p>
+  </section>
+
+  <section id="viewer" hidden>
+    <div id="doc" class="tool-select"></div>
+  </section>
+
+  <aside id="sidebar" hidden>
+    <div class="side-head">
+      <h2>Notes &amp; highlights</h2>
+      <button id="btn-close-side" class="icon" aria-label="Close panel">&times;</button>
+    </div>
+    <div id="side-list"></div>
+  </aside>
+</main>
+
+<div id="sel-pop" class="pop" hidden>
+  <div class="swatches"></div>
+  <button data-act="note" title="Highlight and add a note">&#128172; Note</button>
+</div>
+
+<div id="hl-pop" class="pop" hidden>
+  <div class="swatches"></div>
+  <button data-act="note" title="Edit note">&#128172; Note</button>
+  <button data-act="delete" class="danger" title="Remove highlight">&#128465;</button>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="drop-overlay" hidden>Drop .docx to open</div>
+
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/docx-preview.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
